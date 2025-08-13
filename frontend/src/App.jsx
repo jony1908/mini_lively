@@ -5,6 +5,7 @@ import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
+import EmailVerification from './components/EmailVerification';
 import './App.css';
 
 // Landing page component
@@ -142,6 +143,7 @@ function App() {
                 </AuthGuard>
               } 
             />
+            <Route path="/verify-email" element={<EmailVerification />} />
             
             {/* Protected routes */}
             <Route 

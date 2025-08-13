@@ -191,3 +191,30 @@ alembic upgrade head
 # Rollback migration
 alembic downgrade -1
 ```
+
+### Environment Configuration
+Configure these variables in `backend/.env`:
+```env
+# Database
+DATABASE_URL=postgresql://user:pass@localhost:5432/mini_lively
+
+# JWT
+SECRET_KEY=your-secret-key-change-this-in-production
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+# Email Configuration
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
+FROM_EMAIL=your-email@gmail.com
+FROM_NAME=Mini Lively
+EMAIL_VERIFICATION_EXPIRE_HOURS=24
+FRONTEND_URL=http://localhost:5174
+
+# OAuth (optional)
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+APPLE_CLIENT_ID=your-apple-client-id
+APPLE_CLIENT_SECRET=your-apple-client-secret
+```

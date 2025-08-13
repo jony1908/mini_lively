@@ -12,3 +12,4 @@ passlib[bcrypt]==1.7.4
 python-jose[cryptography]==3.3.0
 authlib==1.3.0
 pydantic[email]==2.9.2
+aiosmtplib==3.0.1

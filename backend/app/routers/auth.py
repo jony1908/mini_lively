@@ -3,14 +3,15 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from typing import Optional
 
-from ..dependencies import get_db
+from ..database.connection import get_db
 from ..crud.auth import AuthCRUD
 from ..schemas.auth import (
     UserCreate, UserLogin, UserResponse, Token, TokenRefresh,
     OAuthLoginRequest, AuthResponse
 )
-from ..auth import TokenUtils, OAuthUtils
+from ..utils.auth import TokenUtils, OAuthUtils
 from ..models.user import User
+from ..utils.email_service import EmailService
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 security = HTTPBearer()
@@ -64,6 +65,17 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
     
     # Create new user
     user = auth_crud.create_user_with_password(user_data)
+    
+    # Send verification email
+    try:
+        EmailService.send_verification_email(
+            user.email, 
+            f"{user.first_name} {user.last_name}", 
+            user.id
+        )
+    except Exception as e:
+        print(f"Failed to send verification email: {str(e)}")
+        # Continue with registration even if email fails
     
     # Generate tokens
     access_token = TokenUtils.create_access_token(data={"sub": str(user.id)})
@@ -296,4 +308,78 @@ async def apple_callback(request: Request, db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"OAuth authentication failed: {str(e)}"
+        )
+
+
+@router.post("/verify-email")
+async def verify_email(token: str, db: Session = Depends(get_db)):
+    """Verify user's email address using verification token."""
+    user_id = EmailService.verify_email_token(token)
+    
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired verification token"
+        )
+    
+    auth_crud = AuthCRUD(db)
+    user = auth_crud.get_user_by_id(user_id)
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    if user.is_verified:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email is already verified"
+        )
+    
+    # Mark user as verified
+    user = auth_crud.verify_user_email(user)
+    
+    # Send welcome email
+    try:
+        EmailService.send_welcome_email(
+            user.email, 
+            f"{user.first_name} {user.last_name}"
+        )
+    except Exception as e:
+        print(f"Failed to send welcome email: {str(e)}")
+    
+    return {"message": "Email verified successfully"}
+
+
+@router.post("/resend-verification")
+async def resend_verification_email(
+    current_user: User = Depends(get_current_user)
+):
+    """Resend verification email to current user."""
+    if current_user.is_verified:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email is already verified"
+        )
+    
+    try:
+        success = EmailService.send_verification_email(
+            current_user.email,
+            f"{current_user.first_name} {current_user.last_name}",
+            current_user.id
+        )
+        
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to send verification email"
+            )
+        
+        return {"message": "Verification email sent successfully"}
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to send verification email: {str(e)}"
         )

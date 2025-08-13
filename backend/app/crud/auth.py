@@ -3,7 +3,7 @@ from sqlalchemy import or_
 from typing import Optional
 from ..models.user import User
 from ..schemas.auth import UserCreate
-from ..auth import PasswordUtils
+from ..utils.auth import PasswordUtils
 
 
 class AuthCRUD:

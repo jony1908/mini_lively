@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from contextlib import asynccontextmanager
 
-from .dependencies import get_db, init_db
+from .database.connection import get_db, init_db
 from .routers.auth import router as auth_router
 
 @asynccontextmanager

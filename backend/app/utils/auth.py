@@ -1,4 +1,3 @@
-import os
 from datetime import datetime, timedelta
 from typing import Optional, Union
 from passlib.context import CryptContext
@@ -7,28 +6,24 @@ from fastapi import HTTPException, status
 from authlib.integrations.starlette_client import OAuth
 from starlette.config import Config
 
+from ..config.settings import settings
+
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # JWT Configuration
-SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-this-in-production")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-REFRESH_TOKEN_EXPIRE_DAYS = 30
 
 # OAuth Configuration
 config = Config('.env')
 oauth = OAuth(config)
 
 # Google OAuth
-GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
-GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
-
-if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
+if settings.GOOGLE_CLIENT_ID and settings.GOOGLE_CLIENT_SECRET:
     google = oauth.register(
         name='google',
-        client_id=GOOGLE_CLIENT_ID,
-        client_secret=GOOGLE_CLIENT_SECRET,
+        client_id=settings.GOOGLE_CLIENT_ID,
+        client_secret=settings.GOOGLE_CLIENT_SECRET,
         server_metadata_url='https://accounts.google.com/.well-known/openid_configuration',
         client_kwargs={
             'scope': 'openid email profile'
@@ -36,14 +31,11 @@ if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
     )
 
 # Apple OAuth
-APPLE_CLIENT_ID = os.getenv("APPLE_CLIENT_ID")
-APPLE_CLIENT_SECRET = os.getenv("APPLE_CLIENT_SECRET")
-
-if APPLE_CLIENT_ID and APPLE_CLIENT_SECRET:
+if settings.APPLE_CLIENT_ID and settings.APPLE_CLIENT_SECRET:
     apple = oauth.register(
         name='apple',
-        client_id=APPLE_CLIENT_ID,
-        client_secret=APPLE_CLIENT_SECRET,
+        client_id=settings.APPLE_CLIENT_ID,
+        client_secret=settings.APPLE_CLIENT_SECRET,
         authorization_endpoint='https://appleid.apple.com/auth/authorize',
         token_endpoint='https://appleid.apple.com/auth/token',
         client_kwargs={
@@ -72,26 +64,26 @@ class TokenUtils:
         if expires_delta:
             expire = datetime.utcnow() + expires_delta
         else:
-            expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+            expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
         
         to_encode.update({"exp": expire, "type": "access"})
-        encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+        encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
         return encoded_jwt
 
     @staticmethod
     def create_refresh_token(data: dict) -> str:
         """Create a JWT refresh token."""
         to_encode = data.copy()
-        expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+        expire = datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
         to_encode.update({"exp": expire, "type": "refresh"})
-        encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+        encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
         return encoded_jwt
 
     @staticmethod
     def verify_token(token: str, token_type: str = "access") -> Union[dict, None]:
         """Verify and decode a JWT token."""
         try:
-            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
             if payload.get("type") != token_type:
                 return None
             return payload
