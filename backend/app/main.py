@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from contextlib import asynccontextmanager
 
 from .dependencies import get_db, init_db
+from .routers.auth import router as auth_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -24,6 +25,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include routers
+app.include_router(auth_router, prefix="/api")
 
 @app.get("/")
 async def root():
