@@ -5,7 +5,9 @@
       "Bash(touch:*)",
       "Bash(python:*)",
       "Bash(uvicorn:*)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(pip install:*)",
+      "Bash(npm install)"
     ],
     "deny": [],
     "ask": []
