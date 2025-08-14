@@ -17,6 +17,7 @@ to the requriements.
 - Modular API endpoints with separate routers
 - Authentication system with JWT tokens
 - Database models using SQLAlchemy
+- virtual env: `venv/` #all the installment needs go to side
 
 ### Frontend (React + Vite)
 - Location: `frontend/`

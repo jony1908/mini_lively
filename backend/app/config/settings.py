@@ -26,5 +26,9 @@ class Settings:
     GOOGLE_CLIENT_SECRET: str = os.getenv("GOOGLE_CLIENT_SECRET", "")
     APPLE_CLIENT_ID: str = os.getenv("APPLE_CLIENT_ID", "")
     APPLE_CLIENT_SECRET: str = os.getenv("APPLE_CLIENT_SECRET", "")
+    
+    # Admin Dashboard Settings
+    ADMIN_USERNAME: str = os.getenv("ADMIN_USERNAME", "admin")
+    ADMIN_PASSWORD: str = os.getenv("ADMIN_PASSWORD", "admin123")
 
 settings = Settings()
