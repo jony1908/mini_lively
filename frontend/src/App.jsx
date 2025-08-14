@@ -6,6 +6,7 @@ import Register from './components/Register';
 import Dashboard from './components/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import EmailVerification from './components/EmailVerification';
+import AuthCallback from './components/AuthCallback';
 import './App.css';
 
 // Landing page component
@@ -144,6 +145,7 @@ function App() {
               } 
             />
             <Route path="/verify-email" element={<EmailVerification />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             
             {/* Protected routes */}
             <Route 

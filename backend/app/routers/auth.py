@@ -12,6 +12,7 @@ from ..schemas.auth import (
 from ..utils.auth import TokenUtils, OAuthUtils
 from ..models.user import User
 from ..utils.email_service import EmailService
+from ..config.settings import settings
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 security = HTTPBearer()
@@ -182,7 +183,9 @@ async def get_current_user_profile(current_user: User = Depends(get_current_user
 async def google_auth(request: Request):
     """Initiate Google OAuth login."""
     google_client = OAuthUtils.get_google_oauth()
-    redirect_uri = str(request.url_for('google_callback'))
+    # Construct callback URL manually to avoid url_for issues
+    base_url = str(request.base_url).rstrip('/')
+    redirect_uri = f"{base_url}/api/auth/google/callback"
     return await google_client.authorize_redirect(request, redirect_uri)
 
 
@@ -226,15 +229,18 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
         access_token = TokenUtils.create_access_token(data={"sub": str(user.id)})
         refresh_token = TokenUtils.create_refresh_token(data={"sub": str(user.id)})
         
-        tokens = Token(
-            access_token=access_token,
-            refresh_token=refresh_token
-        )
+        # Redirect to frontend with tokens instead of returning JSON
+        from fastapi.responses import RedirectResponse
+        from urllib.parse import urlencode
         
-        return AuthResponse(
-            user=UserResponse.from_orm(user),
-            tokens=tokens
-        )
+        query_params = urlencode({
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer"
+        })
+        
+        redirect_url = f"{settings.FRONTEND_URL}/auth/callback?{query_params}"
+        return RedirectResponse(url=redirect_url, status_code=302)
         
     except Exception as e:
         raise HTTPException(
@@ -247,7 +253,9 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
 async def apple_auth(request: Request):
     """Initiate Apple OAuth login."""
     apple_client = OAuthUtils.get_apple_oauth()
-    redirect_uri = str(request.url_for('apple_callback'))
+    # Construct callback URL manually to avoid url_for issues
+    base_url = str(request.base_url).rstrip('/')
+    redirect_uri = f"{base_url}/api/auth/apple/callback"
     return await apple_client.authorize_redirect(request, redirect_uri)
 
 
@@ -294,15 +302,18 @@ async def apple_callback(request: Request, db: Session = Depends(get_db)):
         access_token = TokenUtils.create_access_token(data={"sub": str(user.id)})
         refresh_token = TokenUtils.create_refresh_token(data={"sub": str(user.id)})
         
-        tokens = Token(
-            access_token=access_token,
-            refresh_token=refresh_token
-        )
+        # Redirect to frontend with tokens instead of returning JSON
+        from fastapi.responses import RedirectResponse
+        from urllib.parse import urlencode
         
-        return AuthResponse(
-            user=UserResponse.from_orm(user),
-            tokens=tokens
-        )
+        query_params = urlencode({
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer"
+        })
+        
+        redirect_url = f"{settings.FRONTEND_URL}/auth/callback?{query_params}"
+        return RedirectResponse(url=redirect_url, status_code=302)
         
     except Exception as e:
         raise HTTPException(
@@ -382,4 +393,26 @@ async def resend_verification_email(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to send verification email: {str(e)}"
+        )
+
+
+@router.post("/delete-user")
+async def delete_user_by_email(request: dict, db: Session = Depends(get_db)):
+    """Delete user by email - for testing purposes only."""
+    email = request.get("email")
+    if not email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email is required"
+        )
+    
+    auth_crud = AuthCRUD(db)
+    
+    success = auth_crud.delete_user_by_email(email)
+    if success:
+        return {"message": f"User {email} deleted successfully"}
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found or could not be deleted"
         )

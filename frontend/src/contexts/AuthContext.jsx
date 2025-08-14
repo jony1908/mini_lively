@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useRef } from 'react';
 import { authAPI } from '../services/auth';
 
 const AuthContext = createContext();
@@ -61,10 +61,17 @@ const initialState = {
 
 export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
+  const hasCheckedAuth = useRef(false);
 
   // Check if user is authenticated on app load
   useEffect(() => {
     const checkAuth = async () => {
+      // Prevent running multiple times
+      if (hasCheckedAuth.current) {
+        return;
+      }
+      hasCheckedAuth.current = true;
+
       const token = localStorage.getItem('accessToken');
       
       if (token) {
@@ -72,9 +79,11 @@ export const AuthProvider = ({ children }) => {
           const user = await authAPI.getCurrentUser();
           dispatch({ type: 'SET_USER', payload: user });
         } catch (error) {
-          // Token is invalid, remove it
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
+          // Only clear tokens if it's not a network/resource error
+          if (error.code !== 'ERR_INSUFFICIENT_RESOURCES' && error.response?.status === 401) {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+          }
         }
       }
       
@@ -141,6 +150,31 @@ export const AuthProvider = ({ children }) => {
     authAPI.appleAuth();
   };
 
+  // Handle OAuth tokens directly (for OAuth callback)
+  const loginWithTokens = async (tokens) => {
+    dispatch({ type: 'LOGIN_START' });
+    
+    try {
+      // Store tokens first
+      localStorage.setItem('accessToken', tokens.access_token);
+      localStorage.setItem('refreshToken', tokens.refresh_token);
+      
+      // Get user info immediately for OAuth
+      const user = await authAPI.getCurrentUser();
+      
+      dispatch({ type: 'LOGIN_SUCCESS', payload: { 
+        user: user,
+        tokens: tokens
+      }});
+      
+      return { user: user, tokens: tokens };
+    } catch (error) {
+      const errorMessage = error.response?.data?.detail || 'OAuth login failed';
+      dispatch({ type: 'LOGIN_FAILURE', payload: errorMessage });
+      throw error;
+    }
+  };
+
   const value = {
     ...state,
     login,
@@ -148,6 +182,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     loginWithGoogle,
     loginWithApple,
+    loginWithTokens,
   };
 
   return (

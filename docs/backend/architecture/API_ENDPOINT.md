@@ -4,6 +4,10 @@
 ## Overview
 The Mini Lively API provides comprehensive endpoints for managing family activity tracking. All endpoints use REST conventions and return JSON responses.
 
+### API Documentation
+- Interactive docs: http://localhost:8000/docs
+- OpenAPI schema: http://localhost:8000/openapi.json
+
 **Base URL**: `http://localhost:8000`
 **API Prefix**: `/api`
 

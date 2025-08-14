@@ -1,10 +1,12 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 from sqlalchemy.orm import Session
 from contextlib import asynccontextmanager
 
 from .database.connection import get_db, init_db
 from .routers.auth import router as auth_router
+from .config.settings import settings
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -16,6 +18,12 @@ app = FastAPI(
     version="1.0.0",
     description="A modular FastAPI backend with PostgreSQL database",
     lifespan=lifespan
+)
+
+# Add SessionMiddleware for OAuth (must be added first)
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=settings.SECRET_KEY
 )
 
 app.add_middleware(
@@ -47,4 +55,4 @@ async def test_db_connection(db: Session = Depends(get_db)):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)

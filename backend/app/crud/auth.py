@@ -113,3 +113,21 @@ class AuthCRUD:
         self.db.commit()
         self.db.refresh(user)
         return user
+
+    def delete_user(self, user: User) -> bool:
+        """Delete a user from the database."""
+        try:
+            self.db.delete(user)
+            self.db.commit()
+            return True
+        except Exception as e:
+            self.db.rollback()
+            print(f"Error deleting user: {str(e)}")
+            return False
+
+    def delete_user_by_email(self, email: str) -> bool:
+        """Delete a user by email."""
+        user = self.get_user_by_email(email)
+        if user:
+            return self.delete_user(user)
+        return False

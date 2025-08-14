@@ -20,7 +20,7 @@ class Settings:
     FROM_EMAIL: str = os.getenv("FROM_EMAIL", "")
     FROM_NAME: str = os.getenv("FROM_NAME", "Mini Lively")
     EMAIL_VERIFICATION_EXPIRE_HOURS: int = int(os.getenv("EMAIL_VERIFICATION_EXPIRE_HOURS", "24"))
-    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:5174")
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:5173")
     
     GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID", "")
     GOOGLE_CLIENT_SECRET: str = os.getenv("GOOGLE_CLIENT_SECRET", "")

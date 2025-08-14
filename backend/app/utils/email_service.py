@@ -45,13 +45,16 @@ class EmailService:
     @staticmethod
     def create_verification_token(user_id: int) -> str:
         """Create a verification token for email verification."""
+        from jose import jwt
+        from ..config.settings import settings
+        
         expire = datetime.utcnow() + timedelta(hours=settings.EMAIL_VERIFICATION_EXPIRE_HOURS)
         token_data = {
             "sub": str(user_id),
             "exp": expire,
             "type": "email_verification"
         }
-        return TokenUtils.create_access_token(token_data, expires_delta=timedelta(hours=settings.EMAIL_VERIFICATION_EXPIRE_HOURS))
+        return jwt.encode(token_data, settings.SECRET_KEY, algorithm="HS256")
 
     @staticmethod
     def verify_email_token(token: str) -> Optional[int]:
