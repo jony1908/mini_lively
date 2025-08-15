@@ -16,7 +16,7 @@ Mini Lively is a FastAPI-based family activity monitoring system that allows par
 git clone <repository-url>
 cd mini-lively/backend
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+.\backend\venv\Scripts\activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 

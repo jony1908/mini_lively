@@ -8,7 +8,7 @@ from .database.connection import get_db, init_db
 from .routers.auth import router as auth_router
 from .config.settings import settings
 from .admin.config import create_admin
-from .admin.basic_views import BasicUserAdmin, BasicAdminUserAdmin
+from .admin.basic_views import BasicUserAdmin, BasicAdminUserAdmin, BasicChildAdmin
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -43,6 +43,7 @@ app.include_router(auth_router, prefix="/api")
 admin = create_admin(app)
 admin.add_view(BasicUserAdmin)
 admin.add_view(BasicAdminUserAdmin)
+admin.add_view(BasicChildAdmin)
 
 @app.get("/")
 async def root():

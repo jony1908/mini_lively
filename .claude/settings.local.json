@@ -11,7 +11,10 @@
       "Bash(rm:*)",
       "Bash(curl:*)",
       "Bash(npm run build:*)",
-      "Bash(timeout 5 npm run dev)"
+      "Bash(timeout 5 npm run dev)",
+      "Bash(./venv/Scripts/activate)",
+      "WebFetch(domain:github.com)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": [],

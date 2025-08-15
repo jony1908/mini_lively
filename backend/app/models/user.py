@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, DateTime, Boolean
+from sqlalchemy.orm import relationship
 from datetime import datetime
 from .base import Base
 
@@ -23,3 +24,6 @@ class User(Base):
     # User status
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
+    
+    # Relationships
+    children = relationship("Child", back_populates="parent")

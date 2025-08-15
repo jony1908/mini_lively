@@ -30,6 +30,8 @@ ADMIN_PASSWORD=your_secure_password
 ```
 
 ## Current Models
+
+### User Management Category
 - **Users**: Complete CRUD operations for user accounts
   - View user details, OAuth information, verification status
   - Search by email, name
@@ -43,20 +45,56 @@ ADMIN_PASSWORD=your_secure_password
   - Password hashes are hidden for security
   - Create additional admin users through the interface
 
+### Content Category
+- **Children**: Complete family member management with advanced features
+  - **Computed Age Display**: Automatic age calculation from date of birth (e.g., "Emma Doe, Age: 10")
+  - **Advanced Search**: Child names (first/last) and parent email search
+  - **Smart Filtering**: 
+    - BooleanFilter for active status (dropdown: Active/Inactive)
+    - AllUniqueStringValuesFilter for gender (dropdown with database values)
+  - **Parent Relationship Integration**:
+    - Display parent email in list view for quick identification
+    - Full parent information in detail view (email, first name, last name)
+    - Search children by parent email address
+  - **Enhanced Profile Management**:
+    - Complete child profiles with interests and skills
+    - Date of birth with automatic age computation
+    - Gender and activity status tracking
+  - **Professional Admin Interface**:
+    - Organized under Content category for logical grouping
+    - Form validation with computed fields properly excluded
+    - 50-item pagination with configurable options
+    - FontAwesome child icon for visual identification
+  - **Database Integration**: 
+    - Proper SQLAlchemy relationships with User model
+    - Foreign key constraints ensuring data integrity
+    - Automatic timestamps for creation and updates
+
 ## Adding New Models
 To add admin views for new models:
 
 1. Create your SQLAlchemy model in `app/models/`
-2. Add a corresponding admin view in `app/admin/views.py`:
+2. Add a corresponding admin view in `app/admin/basic_views.py`:
 ```python
 class YourModelAdmin(ModelView, model=YourModel):
+    name = "Your Model"
+    name_plural = "Your Models"
+    category = "Content"  # Or "User Management" or create new category
+    icon = "fa-solid fa-icon-name"
     column_list = [YourModel.field1, YourModel.field2]
     # Configure other properties as needed
 ```
 3. Register the view in `app/main.py`:
 ```python
+from .admin.basic_views import YourModelAdmin
 admin.add_view(YourModelAdmin)
 ```
+
+### Admin Interface Organization
+The admin interface is organized into categories for better navigation:
+- **User Management**: User accounts and admin management
+- **Content**: Family data, children profiles, and activity content
+- You can create additional categories by setting the `category` parameter in ModelView classes
 
 ## Running the Backend
 
