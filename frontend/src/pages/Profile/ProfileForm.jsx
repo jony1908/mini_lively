@@ -56,6 +56,18 @@ const ProfileForm = () => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        return;
+      }
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('File size must be less than 5MB');
+        return;
+      }
+      
       // Create preview URL
       const previewUrl = URL.createObjectURL(file);
       setFormData(prev => ({
@@ -65,6 +77,15 @@ const ProfileForm = () => {
       }));
     }
   };
+
+  // Clean up preview URL when component unmounts
+  React.useEffect(() => {
+    return () => {
+      if (formData.profilePicturePreview) {
+        URL.revokeObjectURL(formData.profilePicturePreview);
+      }
+    };
+  }, [formData.profilePicturePreview]);
 
   // Handle form submission
   const handleSubmit = async (e) => {
@@ -81,6 +102,20 @@ const ProfileForm = () => {
         setUser(updatedUser); // Update user in auth context
       }
 
+      // Handle profile picture upload if a file is selected
+      let profilePictureUrl = null;
+      if (formData.profilePicture) {
+        try {
+          // TODO: Implement actual file upload to cloud storage
+          // For now, we'll use the local preview URL (not persistent)
+          profilePictureUrl = formData.profilePicturePreview;
+          console.log('Profile picture selected but upload to cloud storage not implemented yet');
+        } catch (uploadError) {
+          console.error('Profile picture upload failed:', uploadError);
+          // Continue with profile update even if picture upload fails
+        }
+      }
+
       // Then, update or create profile data
       const profileData = {
         address: formData.address,
@@ -88,6 +123,7 @@ const ProfileForm = () => {
         state: formData.state,
         postal_code: formData.postalCode,
         country: formData.country,
+        profile_picture_url: profilePictureUrl || profile?.profile_picture_url,
       };
 
       if (profile) {
@@ -252,14 +288,50 @@ const ProfileForm = () => {
           </h3>
           <div className="flex flex-col p-4">
             <div className="flex flex-col items-center gap-6 rounded-xl border-2 border-dashed border-[#e9e2ce] px-6 py-14">
-              <div className="flex max-w-[480px] flex-col items-center gap-2">
-                <p className="text-[#1c180d] text-lg font-bold leading-tight tracking-[-0.015em] max-w-[480px] text-center">
-                  Upload Picture
-                </p>
-                <p className="text-[#1c180d] text-sm font-normal leading-normal max-w-[480px] text-center">
-                  Tap to select a photo
-                </p>
-              </div>
+              {/* Image Preview */}
+              {formData.profilePicturePreview ? (
+                <div className="flex flex-col items-center gap-4">
+                  <div className="w-24 h-24 rounded-full overflow-hidden bg-[#f4f0e6]">
+                    <img 
+                      src={formData.profilePicturePreview} 
+                      alt="Profile Preview" 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <p className="text-[#1c180d] text-sm font-medium">
+                    {formData.profilePicture?.name}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ 
+                      ...prev, 
+                      profilePicture: null, 
+                      profilePicturePreview: null 
+                    }))}
+                    className="text-red-600 text-sm underline"
+                  >
+                    Remove Photo
+                  </button>
+                </div>
+              ) : (
+                <div className="flex max-w-[480px] flex-col items-center gap-2">
+                  <div className="w-16 h-16 rounded-full bg-[#f4f0e6] flex items-center justify-center mb-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="#9e8747" viewBox="0 0 256 256">
+                      <path d="M208,56H180.28L166.65,35.56A8,8,0,0,0,160,32H96a8,8,0,0,0-6.65,3.56L75.71,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56ZM128,168a36,36,0,1,1,36-36A36,36,0,0,1,128,168Z"></path>
+                    </svg>
+                  </div>
+                  <p className="text-[#1c180d] text-lg font-bold leading-tight tracking-[-0.015em] max-w-[480px] text-center">
+                    Upload Picture
+                  </p>
+                  <p className="text-[#1c180d] text-sm font-normal leading-normal max-w-[480px] text-center">
+                    Tap to select a photo (Max 5MB)
+                  </p>
+                  <p className="text-[#9e8747] text-xs font-normal leading-normal max-w-[480px] text-center">
+                    Note: Profile picture upload is currently in development
+                  </p>
+                </div>
+              )}
+              
               <label htmlFor="profile-picture">
                 <input
                   id="profile-picture"
@@ -270,10 +342,12 @@ const ProfileForm = () => {
                 />
                 <button
                   type="button"
-                  className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#f4f0e6] text-[#1c180d] text-sm font-bold leading-normal tracking-[0.015em]"
+                  className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#f4f0e6] text-[#1c180d] text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#e9e2ce] transition-colors"
                   onClick={() => document.getElementById('profile-picture').click()}
                 >
-                  <span className="truncate">Choose Photo</span>
+                  <span className="truncate">
+                    {formData.profilePicturePreview ? 'Change Photo' : 'Choose Photo'}
+                  </span>
                 </button>
               </label>
             </div>
