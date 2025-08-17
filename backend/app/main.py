@@ -1,12 +1,15 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 from sqlalchemy.orm import Session
 from contextlib import asynccontextmanager
+import os
 
 from .database.connection import get_db, init_db
 from .routers.auth import router as auth_router
 from .routers.profile import router as profile_router
+from .routers.avatar import router as avatar_router
 from .config.settings import settings
 from .admin.config import create_admin
 from .admin.basic_views import BasicUserAdmin, BasicAdminUserAdmin, BasicChildAdmin, BasicUserProfileAdmin
@@ -40,6 +43,12 @@ app.add_middleware(
 # Include routers
 app.include_router(auth_router, prefix="/api")
 app.include_router(profile_router, prefix="/api")
+app.include_router(avatar_router, prefix="/api")
+
+# Create uploads directory and mount static files
+uploads_dir = "uploads"
+os.makedirs(uploads_dir, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 
 # Setup admin dashboard
 admin = create_admin(app)

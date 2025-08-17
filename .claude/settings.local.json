@@ -14,7 +14,8 @@
       "Bash(timeout 5 npm run dev)",
       "Bash(./venv/Scripts/activate)",
       "WebFetch(domain:github.com)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(taskkill:*)"
     ],
     "deny": [],
     "ask": [],

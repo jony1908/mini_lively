@@ -15,3 +15,5 @@ pydantic[email]==2.9.2
 aiosmtplib==3.0.1
 itsdangerous==2.1.2
 sqladmin[full]==0.21.0
+pillow==10.4.0
+aiofiles==24.1.0
