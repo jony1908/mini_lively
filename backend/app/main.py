@@ -10,6 +10,7 @@ from .database.connection import get_db, init_db
 from .routers.auth import router as auth_router
 from .routers.profile import router as profile_router
 from .routers.avatar import router as avatar_router
+from .routers.child import router as child_router
 from .config.settings import settings
 from .admin.config import create_admin
 from .admin.basic_views import BasicUserAdmin, BasicAdminUserAdmin, BasicChildAdmin, BasicUserProfileAdmin
@@ -44,6 +45,7 @@ app.add_middleware(
 app.include_router(auth_router, prefix="/api")
 app.include_router(profile_router, prefix="/api")
 app.include_router(avatar_router, prefix="/api")
+app.include_router(child_router, prefix="/api")
 
 # Create uploads directory and mount static files
 uploads_dir = "uploads"

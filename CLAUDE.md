@@ -61,4 +61,5 @@ to the requriements.
 
 ## Coding Standard
 - Add consice comments for each module and complex functions.
-- replace the unicode characters with regular text in testing
+- replace the unicode characters with regular text in testing. 
+- Don't use emojis

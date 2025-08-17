@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ProfileProvider } from './contexts/ProfileContext';
+import { ChildProvider } from './contexts/ChildContext';
 import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Dashboard';
@@ -9,6 +10,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import EmailVerification from './components/EmailVerification';
 import AuthCallback from './components/AuthCallback';
 import { ProfileForm, ProfileView } from './pages/Profile';
+import ChildrenList from './components/Children/ChildrenList';
+import AddChildForm from './components/Children/AddChildForm';
 import './App.css';
 
 // Landing page component
@@ -124,7 +127,8 @@ function App() {
   return (
     <AuthProvider>
       <ProfileProvider>
-        <Router>
+        <ChildProvider>
+          <Router>
           <div className="App">
             <Routes>
               {/* Landing page */}
@@ -177,12 +181,31 @@ function App() {
                   </ProtectedRoute>
                 } 
               />
+
+              {/* Children routes */}
+              <Route 
+                path="/children" 
+                element={
+                  <ProtectedRoute>
+                    <ChildrenList />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/children/add" 
+                element={
+                  <ProtectedRoute>
+                    <AddChildForm />
+                  </ProtectedRoute>
+                } 
+              />
               
               {/* Catch all route */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </div>
-        </Router>
+          </Router>
+        </ChildProvider>
       </ProfileProvider>
     </AuthProvider>
   );

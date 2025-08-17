@@ -16,6 +16,7 @@ class Child(Base):
     # Enhanced profile fields
     interests = Column(Text, nullable=True)
     skills = Column(Text, nullable=True)
+    avatar_url = Column(String, nullable=True)
     
     # Relationships
     parent_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
