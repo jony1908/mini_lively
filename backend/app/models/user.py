@@ -10,8 +10,8 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=True)  # Nullable for OAuth users
-    first_name = Column(String, nullable=False)
-    last_name = Column(String, nullable=False)
+    first_name = Column(String, nullable=True)
+    last_name = Column(String, nullable=True)
     
     # OAuth fields
     oauth_provider = Column(String, nullable=True)  # 'google', 'apple', or None for email/password
@@ -26,4 +26,13 @@ class User(Base):
     is_verified = Column(Boolean, default=False)
     
     # Relationships
-    children = relationship("Child", back_populates="parent")
+    children = relationship("Child", back_populates="parent", cascade="all, delete-orphan")
+    profile = relationship("UserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
+
+    def __repr__(self):
+        name_part = f"{self.first_name or ''} {self.last_name or ''}".strip() or "No Name"
+        return f"<User(id={self.id}, email='{self.email}', name='{name_part}')>"
+    
+    def __str__(self):
+        name_part = f"{self.first_name or ''} {self.last_name or ''}".strip()
+        return f"{name_part} ({self.email})" if name_part else self.email

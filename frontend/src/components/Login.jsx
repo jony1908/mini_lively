@@ -39,23 +39,20 @@ const Login = () => {
 
   return (
     <div 
-      className="relative flex size-full min-h-screen flex-col bg-[#f8f9fc] justify-between group/design-root overflow-x-hidden"
+      className="relative flex size-full min-h-screen flex-col bg-[#fcfbf8] justify-between group/design-root overflow-x-hidden"
       style={{ fontFamily: '"Plus Jakarta Sans", "Noto Sans", sans-serif' }}
     >
       <div>
-        <div className="flex items-center bg-[#f8f9fc] p-4 pb-2 justify-between">
-          <div 
-            className="text-[#0d131c] flex size-12 shrink-0 items-center cursor-pointer" 
+        <div className="flex items-center bg-[#fcfbf8] p-4 pb-2 justify-between">
+          <button 
+            className="text-[#1c180d] flex size-16 shrink-0 items-center cursor-pointer bg-transparent border-none" 
             onClick={() => navigate('/')}
-            data-icon="ArrowLeft" 
-            data-size="24px" 
-            data-weight="regular"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
               <path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z"></path>
             </svg>
-          </div>
-          <h2 className="text-[#0d131c] text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-12">Log In</h2>
+          </button>
+          <h2 className="text-[#1c180d] text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-12">Log In</h2>
         </div>
 
         <form onSubmit={handleSubmit}>
@@ -68,7 +65,7 @@ const Login = () => {
                 value={formData.email}
                 onChange={handleInputChange}
                 required
-                className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d131c] focus:outline-0 focus:ring-0 border-none bg-[#e7ecf4] focus:border-none h-14 placeholder:text-[#49699c] p-4 text-base font-normal leading-normal"
+                className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#1c180d] focus:outline-0 focus:ring-0 border-none bg-[#f4f0e6] focus:border-none h-14 placeholder:text-[#9e8747] p-4 text-base font-normal leading-normal"
               />
             </label>
           </div>
@@ -82,12 +79,12 @@ const Login = () => {
                 value={formData.password}
                 onChange={handleInputChange}
                 required
-                className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#0d131c] focus:outline-0 focus:ring-0 border-none bg-[#e7ecf4] focus:border-none h-14 placeholder:text-[#49699c] p-4 text-base font-normal leading-normal"
+                className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#1c180d] focus:outline-0 focus:ring-0 border-none bg-[#f4f0e6] focus:border-none h-14 placeholder:text-[#9e8747] p-4 text-base font-normal leading-normal"
               />
             </label>
           </div>
 
-          <p className="text-[#49699c] text-sm font-normal leading-normal pb-3 pt-1 px-4 underline cursor-pointer">
+          <p className="text-[#9e8747] text-sm font-normal leading-normal pb-3 pt-1 px-4 underline cursor-pointer">
             Forgot Password?
           </p>
 
@@ -101,7 +98,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-12 px-5 flex-1 bg-[#2071f3] text-[#f8f9fc] text-base font-bold leading-normal tracking-[0.015em] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-12 px-5 flex-1 bg-[#fac638] text-[#1c180d] text-base font-bold leading-normal tracking-[0.015em] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span className="truncate">
                 {loading ? 'Logging In...' : 'Log In'}
@@ -115,14 +112,14 @@ const Login = () => {
             <button
               type="button"
               onClick={handleGoogleLogin}
-              className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-12 px-5 bg-[#e7ecf4] text-[#0d131c] text-base font-bold leading-normal tracking-[0.015em] w-full"
+              className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-12 px-5 bg-[#f4f0e6] text-[#1c180d] text-base font-bold leading-normal tracking-[0.015em] w-full"
             >
               <span className="truncate">Log In with Gmail</span>
             </button>
             <button
               type="button"
               onClick={handleAppleLogin}
-              className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-12 px-5 bg-[#e7ecf4] text-[#0d131c] text-base font-bold leading-normal tracking-[0.015em] w-full"
+              className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-12 px-5 bg-[#f4f0e6] text-[#1c180d] text-base font-bold leading-normal tracking-[0.015em] w-full"
             >
               <span className="truncate">Log In with Apple</span>
             </button>

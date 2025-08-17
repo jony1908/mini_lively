@@ -27,6 +27,12 @@ export const authAPI = {
     return response.data;
   },
 
+  // Update current user
+  updateUser: async (userData) => {
+    const response = await apiClient.put('/auth/me', userData);
+    return response.data;
+  },
+
   // Google OAuth
   googleAuth: () => {
     window.location.href = `${apiClient.defaults.baseURL}/auth/google`;

@@ -10,7 +10,7 @@ A React mobile-first frontend for the Mini Lively family activity monitoring pla
 - **State Management**: React Context API
 - **Routing**: React Router
 - **HTTP Client**: Axios
-- **Authentication**: JWT tokens
+- **Authentication**: JWT tokens with OAuth 2.0 support
 
 ## Application Architecture
 
@@ -28,6 +28,7 @@ frontend/
 │   │   ├── Login.jsx
 │   │   ├── Register.jsx
 │   │   ├── EmailVerification.jsx
+│   │   ├── AuthCallback.jsx
 │   │   └── ProtectedRoute.jsx
 │   ├── contexts/       # React Context providers
 │   │   └── AuthContext.jsx
@@ -57,9 +58,10 @@ Static assets that are imported into components and processed by Vite (e.g., ima
 ### `/src/components/`
 Reusable UI components that are independent of specific features or pages:
 - **Dashboard.jsx**: Main dashboard interface
-- **Login.jsx**: User login form
-- **Register.jsx**: User registration form  
+- **Login.jsx**: User login form with OAuth options
+- **Register.jsx**: User registration form with OAuth options
 - **EmailVerification.jsx**: Email verification component
+- **AuthCallback.jsx**: OAuth callback handler for social login
 - **ProtectedRoute.jsx**: Route protection wrapper
 
 ### `/src/contexts/`
@@ -87,11 +89,27 @@ Pure utility functions that perform common tasks and are not tied to specific co
 Global state management files. Currently using React Context, but prepared for libraries like Redux or Zustand if needed.
 
 ## Authentication Flow
+
+### Traditional Email/Password Flow
 1. JWT token-based authentication
 2. Protected routes using ProtectedRoute component
 3. Context-based auth state management
 4. Automatic token refresh handling
 5. Email verification process
+
+### OAuth 2.0 Social Login Flow
+1. **User clicks OAuth button** (Google/Apple) on Login/Register page
+2. **Frontend redirects** to backend OAuth endpoint (`/auth/google` or `/auth/apple`)
+3. **Backend handles OAuth** with third-party provider authentication
+4. **Provider redirects back** to `/auth/callback` with tokens in URL params
+5. **AuthCallback component** processes tokens and authenticates user
+6. **User redirected** to dashboard upon successful authentication
+
+### Authentication Components
+- **AuthContext**: Global authentication state management with OAuth methods
+- **Login/Register**: Forms with email/password and OAuth options
+- **AuthCallback**: Handles OAuth return flow and token processing
+- **ProtectedRoute**: Route guards for authenticated-only pages
 
 ## Mobile-First Design
 - Responsive design using Tailwind CSS

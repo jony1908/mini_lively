@@ -31,8 +31,8 @@ The User model represents parents and guardians who use the Mini Lively system t
 | `id` | Integer | Primary Key, Index | Unique identifier for each user |
 | `email` | String | Unique, Index, Not Null | User's email address for authentication |
 | `password_hash` | String | Nullable | Hashed password (null for OAuth users) |
-| `first_name` | String | Not Null | User's first name |
-| `last_name` | String | Not Null | User's last name |
+| `first_name` | String | Nullable | User's first name (optional) |
+| `last_name` | String | Nullable | User's last name (optional) |
 | `oauth_provider` | String | Nullable | OAuth provider ('google', 'apple', or null) |
 | `oauth_id` | String | Nullable | External OAuth provider user ID |
 | `created_at` | DateTime | Default: now | Account creation timestamp |
@@ -43,6 +43,7 @@ The User model represents parents and guardians who use the Mini Lively system t
 #### Model Definition
 ```python
 from sqlalchemy import Column, Integer, String, DateTime, Boolean
+from sqlalchemy.orm import relationship
 from datetime import datetime
 from .base import Base
 
@@ -52,8 +53,8 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=True)
-    first_name = Column(String, nullable=False)
-    last_name = Column(String, nullable=False)
+    first_name = Column(String, nullable=True)
+    last_name = Column(String, nullable=True)
     
     # OAuth fields
     oauth_provider = Column(String, nullable=True)
@@ -66,6 +67,18 @@ class User(Base):
     # User status
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
+    
+    # Relationships
+    children = relationship("Child", back_populates="parent", cascade="all, delete-orphan")
+    profile = relationship("UserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
+
+    def __repr__(self):
+        name_part = f"{self.first_name or ''} {self.last_name or ''}".strip() or "No Name"
+        return f"<User(id={self.id}, email='{self.email}', name='{name_part}')>"
+    
+    def __str__(self):
+        name_part = f"{self.first_name or ''} {self.last_name or ''}".strip()
+        return f"{name_part} ({self.email})" if name_part else self.email
 ```
 
 #### Authentication Support
@@ -73,12 +86,138 @@ The User model supports two authentication methods:
 1. **Email/Password**: Traditional registration with hashed password
 2. **OAuth**: Google and Apple Sign-In integration
 
+#### Relationships
+
+| Relationship | Type | Description |
+|--------------|------|-------------|
+| `children` | One-to-Many | References Child model (children/dependents) |
+| `profile` | One-to-One | References UserProfile model (additional user data) |
+
+#### String Representation
+The User model includes enhanced string representation for better debugging and admin display:
+- **`__repr__`**: `<User(id=13, email='user@example.com', name='John Doe')>` or `<User(id=13, email='user@example.com', name='No Name')>`
+- **`__str__`**: `John Doe (user@example.com)` or `user@example.com` (if no name provided)
+
 #### Key Features
 - **Email Verification**: Users must verify their email before full access
 - **OAuth Integration**: Seamless social login support
 - **Flexible Authentication**: Supports both traditional and social authentication
 - **Audit Trail**: Automatic timestamps for creation and updates
 - **Account Status**: Active/inactive and verified status tracking
+- **Profile Support**: Optional extended profile information via UserProfile relationship
+
+## UserProfile Model
+
+### UserProfile Class
+**File**: `backend/app/models/user_profile.py`
+**Table**: `user_profiles`
+
+The UserProfile model stores extended profile information for users in the Mini Lively system. This model provides additional contact, location, and preference data that supports activity management and regional features.
+
+#### Fields
+
+| Field | Type | Constraints | Description |
+|-------|------|-------------|-------------|
+| `id` | Integer | Primary Key, Index | Unique identifier for each profile |
+| `phone_number` | String | Nullable | Primary contact phone number |
+| `profile_picture_url` | String | Nullable | URL/path to profile image |
+| `city` | String | Nullable | User's city |
+| `state` | String | Nullable | User's state/province |
+| `postal_code` | String | Nullable, Index | Zip/postal code for regional searches |
+| `country` | String | Nullable | User's country |
+| `timezone` | String | Nullable | User's timezone for scheduling |
+| `preferred_activity_types` | Text | Nullable | JSON string of activity preferences |
+| `preferred_schedule` | Text | Nullable | JSON string of availability preferences |
+| `notification_preferences` | Text | Nullable | JSON string of communication preferences |
+| `user_id` | Integer | Foreign Key, Unique, Not Null | Reference to parent User |
+| `created_at` | DateTime | Default: now | Profile creation timestamp |
+| `updated_at` | DateTime | Auto-update | Last modification timestamp |
+
+#### Relationships
+
+| Relationship | Type | Description |
+|--------------|------|-------------|
+| `user` | One-to-One | References User model (profile owner) |
+
+#### Model Definition
+```python
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
+from sqlalchemy.orm import relationship
+from datetime import datetime
+from .base import Base
+
+class UserProfile(Base):
+    __tablename__ = "user_profiles"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    
+    # Contact Information
+    phone_number = Column(String, nullable=True)
+    profile_picture_url = Column(String, nullable=True)
+    
+    # Location
+    city = Column(String, nullable=True)
+    state = Column(String, nullable=True)
+    postal_code = Column(String, nullable=True, index=True)
+    country = Column(String, nullable=True)
+    
+    # Activity Preferences (stored as JSON strings)
+    preferred_activity_types = Column(Text, nullable=True)
+    preferred_schedule = Column(Text, nullable=True)
+    
+    # Settings
+    timezone = Column(String, nullable=True)
+    notification_preferences = Column(Text, nullable=True)
+    
+    # Relationships
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False)
+    user = relationship("User", back_populates="profile")
+    
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+```
+
+#### JSON Field Structure
+The UserProfile model uses JSON-stored text fields for flexible preference management:
+
+**`preferred_activity_types`** (List of strings):
+```json
+["sports", "arts", "music", "outdoors"]
+```
+
+**`preferred_schedule`** (Schedule preferences):
+```json
+{
+  "weekdays": ["monday", "wednesday", "friday"],
+  "times": ["morning", "afternoon"],
+  "duration": "1-2 hours"
+}
+```
+
+**`notification_preferences`** (Communication settings):
+```json
+{
+  "email": true,
+  "sms": false,
+  "push": true,
+  "frequency": "daily"
+}
+```
+
+#### Key Features
+- **Geographic Indexing**: Postal code field indexed for fast regional searches
+- **Flexible Preferences**: JSON-based storage for extensible activity and schedule preferences
+- **One-to-One Relationship**: Each user can have exactly one profile
+- **Optional Data**: All fields nullable for gradual profile completion
+- **Activity Management**: Support for location-based activity discovery
+- **Communication Control**: Granular notification preference management
+
+#### Regional Features
+- **Postal Code Search**: Fast lookup for activities in user's area
+- **Geographic Filtering**: Filter users by city, state, country, postal code
+- **Timezone Support**: Schedule activities across different time zones
+- **Location Analytics**: Regional user distribution and activity patterns
 
 ## Child Model
 
@@ -135,7 +274,7 @@ class Child(Base):
     skills = Column(Text, nullable=True)
     
     # Relationships
-    parent_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    parent_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     parent = relationship("User", back_populates="children")
     
     # Timestamps
@@ -161,6 +300,18 @@ class Child(Base):
 - **Admin Integration**: Full SQLAdmin interface with filtering, search, and form management
 - **Data Integrity**: Proper constraints and validation rules
 
+## Model Relationships Summary
+
+### Current Model Relationships
+- **User → Child** (one-to-many) ✅ **Implemented**
+- **User → UserProfile** (one-to-one) ✅ **Implemented**
+
+### Model Integration Features
+- **Geographic Search**: UserProfile postal codes enable regional activity discovery
+- **Activity Preferences**: JSON-based preference storage for personalized recommendations
+- **Family Management**: Users can manage multiple children with individual profiles
+- **Enhanced Admin Display**: User string representations improve admin interface usability
+
 ## Future Models
 
 ### Planned Models
@@ -170,13 +321,12 @@ class Child(Base):
 - **ActivityType**: Categories of activities
 - **Location**: Activity locations
 
-### Current Model Relationships
-- User → Child (one-to-many) ✅ **Implemented**
-
 ### Future Model Relationships
 - Child → Activity (one-to-many)
 - User → Schedule (one-to-many)
 - User → Event (one-to-many)
+- UserProfile → Activity (location-based filtering)
+- Location → Activity (one-to-many)
 
 ## Database Configuration
 
@@ -196,12 +346,19 @@ The system uses SQLAlchemy's declarative approach for model definition. Database
 from app.models.user import User
 from app.database.connection import get_db
 
-# Email/password user
+# Email/password user with names
 user = User(
     email="parent@example.com",
     password_hash=hash_password("secure_password"),
     first_name="Jane",
     last_name="Doe"
+)
+
+# Email/password user without names (optional)
+user_minimal = User(
+    email="user@example.com",
+    password_hash=hash_password("secure_password")
+    # first_name and last_name can be omitted
 )
 
 # OAuth user
@@ -215,6 +372,40 @@ oauth_user = User(
 )
 ```
 
+### Creating a UserProfile
+```python
+from app.models.user_profile import UserProfile
+
+# Basic profile
+profile = UserProfile(
+    user_id=user.id,
+    phone_number="+1-555-123-4567",
+    city="San Francisco",
+    state="CA",
+    postal_code="94102",
+    country="USA",
+    timezone="America/Los_Angeles"
+)
+
+# Profile with preferences (JSON fields)
+import json
+
+profile_with_prefs = UserProfile(
+    user_id=user.id,
+    preferred_activity_types=json.dumps(["sports", "arts", "outdoors"]),
+    preferred_schedule=json.dumps({
+        "weekdays": ["monday", "wednesday", "friday"],
+        "times": ["afternoon"],
+        "duration": "1-2 hours"
+    }),
+    notification_preferences=json.dumps({
+        "email": True,
+        "sms": False,
+        "push": True
+    })
+)
+```
+
 ### Querying Users
 ```python
 # Find user by email
@@ -225,4 +416,18 @@ active_users = session.query(User).filter(
     User.is_active == True,
     User.is_verified == True
 ).all()
+
+# Find users by postal code (geographic search)
+from app.models.user_profile import UserProfile
+
+local_users = session.query(User).join(UserProfile).filter(
+    UserProfile.postal_code == "94102"
+).all()
+
+# Get user with profile information
+user_with_profile = session.query(User).filter(
+    User.email == "parent@example.com"
+).first()
+if user_with_profile.profile:
+    print(f"User location: {user_with_profile.profile.city}, {user_with_profile.profile.state}")
 ```

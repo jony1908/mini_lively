@@ -48,7 +48,8 @@ to the requriements.
 - **Development**: `docs/frontend/development/`
 
 ### Summary Documents
-- **Location**: `docs/summary/`
+- **Progress Summary**: `docs/summary/`
+- **CURRENT TASK**: `docs/summary/CURRENT_TASK.md`
 
 ### Test Documents
 - **Location**: `test/`
@@ -57,3 +58,7 @@ to the requriements.
 - **Backend**: FastAPI, PostgreSQL, SQLAlchemy, JWT, Pydantic
 - **Frontend**: React, Vite, Tailwind CSS, Context API
 - **Authentication**: JWT tokens with refresh mechanism
+
+## Coding Standard
+- Add consice comments for each module and complex functions.
+- replace the unicode characters with regular text in testing

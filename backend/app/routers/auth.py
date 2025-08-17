@@ -7,7 +7,7 @@ from ..database.connection import get_db
 from ..crud.auth import AuthCRUD
 from ..schemas.auth import (
     UserCreate, UserLogin, UserResponse, Token, TokenRefresh,
-    OAuthLoginRequest, AuthResponse
+    OAuthLoginRequest, AuthResponse, UserUpdate
 )
 from ..utils.auth import TokenUtils, OAuthUtils
 from ..models.user import User
@@ -69,9 +69,10 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
     
     # Send verification email
     try:
+        user_name = f"{user.first_name or ''} {user.last_name or ''}".strip() or "User"
         EmailService.send_verification_email(
             user.email, 
-            f"{user.first_name} {user.last_name}", 
+            user_name, 
             user.id
         )
     except Exception as e:
@@ -176,6 +177,27 @@ async def refresh_token(token_data: TokenRefresh, db: Session = Depends(get_db))
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_profile(current_user: User = Depends(get_current_user)):
     """Get current user profile."""
+    return UserResponse.model_validate(current_user)
+
+
+@router.put("/me", response_model=UserResponse)
+async def update_current_user(
+    user_data: UserUpdate, 
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Update current user's basic information."""
+    auth_crud = AuthCRUD(db)
+    
+    # Update user fields if provided
+    if user_data.first_name is not None:
+        current_user.first_name = user_data.first_name
+    if user_data.last_name is not None:
+        current_user.last_name = user_data.last_name
+    
+    db.commit()
+    db.refresh(current_user)
+    
     return UserResponse.model_validate(current_user)
 
 
@@ -353,9 +375,10 @@ async def verify_email(token: str, db: Session = Depends(get_db)):
     
     # Send welcome email
     try:
+        user_name = f"{user.first_name or ''} {user.last_name or ''}".strip() or "User"
         EmailService.send_welcome_email(
             user.email, 
-            f"{user.first_name} {user.last_name}"
+            user_name
         )
     except Exception as e:
         print(f"Failed to send welcome email: {str(e)}")
@@ -375,9 +398,10 @@ async def resend_verification_email(
         )
     
     try:
+        user_name = f"{current_user.first_name or ''} {current_user.last_name or ''}".strip() or "User"
         success = EmailService.send_verification_email(
             current_user.email,
-            f"{current_user.first_name} {current_user.last_name}",
+            user_name,
             current_user.id
         )
         

@@ -175,6 +175,11 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Update user function
+  const setUser = (user) => {
+    dispatch({ type: 'SET_USER', payload: user });
+  };
+
   const value = {
     ...state,
     login,
@@ -183,6 +188,7 @@ export const AuthProvider = ({ children }) => {
     loginWithGoogle,
     loginWithApple,
     loginWithTokens,
+    setUser,
   };
 
   return (

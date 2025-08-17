@@ -3,6 +3,7 @@ from sqladmin.filters import BooleanFilter, AllUniqueStringValuesFilter
 from ..models.user import User
 from ..models.admin_user import AdminUser
 from ..models.child import Child
+from ..models.user_profile import UserProfile
 
 
 class BasicUserAdmin(ModelView, model=User):
@@ -66,6 +67,63 @@ class BasicChildAdmin(ModelView, model=Child):
     
     # Form configuration - exclude computed age from forms
     form_excluded_columns = ["age"]  # Age is computed, don't show in create/edit forms
+    
+    # Basic pagination
+    page_size = 50
+
+
+class BasicUserProfileAdmin(ModelView, model=UserProfile):
+    # Basic working configuration
+    name = "User Profile"
+    name_plural = "User Profiles"
+    category = "User Management"
+    icon = "fa-solid fa-id-card"
+    
+    # Basic display with user information
+    column_list = ["id", "user.first_name", "user.last_name", "user.email", "address", "city", "state", "postal_code", "phone_number"]
+    
+    # Search functionality
+    column_searchable_list = ["user.first_name", "user.last_name", "user.email", "address", "postal_code", "phone_number", "city", "state", "country"]
+    
+    # Detailed view
+    column_details_list = [
+        "id",
+        "user.email",
+        "user.first_name", 
+        "user.last_name",
+        "phone_number",
+        "profile_picture_url",
+        "address",
+        "city",
+        "state",
+        "postal_code",
+        "country",
+        "timezone",
+        "preferred_activity_types",
+        "preferred_schedule", 
+        "notification_preferences",
+        "created_at",
+        "updated_at"
+    ]
+    
+    # Basic filters
+    column_filters = [
+        AllUniqueStringValuesFilter(column=UserProfile.address, title="Address"),
+        AllUniqueStringValuesFilter(column=UserProfile.postal_code, title="Postal Code"),
+        AllUniqueStringValuesFilter(column=UserProfile.country, title="Country"),
+        AllUniqueStringValuesFilter(column=UserProfile.state, title="State"),
+        AllUniqueStringValuesFilter(column=UserProfile.timezone, title="Timezone")
+    ]
+    
+    # Column labels for better display
+    column_labels = {
+        "user.first_name": "First Name",
+        "user.last_name": "Last Name", 
+        "user.email": "Email",
+        "address": "Address",
+        "postal_code": "Zip Code",
+        "phone_number": "Phone"
+    }
     
     # Basic pagination
     page_size = 50

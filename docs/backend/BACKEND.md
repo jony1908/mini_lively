@@ -10,6 +10,7 @@ A FastAPI backend with PostgreSQL database, featuring modular API endpoints rout
 - **Authentication**: JWT tokens
 - **Validation**: Pydantic
 - **Testing**: pytest
+- **Admin**: sqladmin
 
 ## Key Features
 - JWT-based authentication system
@@ -26,6 +27,7 @@ A FastAPI backend with PostgreSQL database, featuring modular API endpoints rout
 - **Data Models**: `docs/backend/architecture/MODELS.md`
 - **Database Schema**: `docs/backend/architecture/DATABASE_SCHEMA.md`
 - **API Endpoints**: `docs/backend/architecture/API_ENDPOINT.md`
+- **Backend Admin**: `docs/backend/architecture/ADMIN.md`
 
 ### Development Resources
 - **Setup Guide**: `docs/backend/development/SETUP.md`

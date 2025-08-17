@@ -18,7 +18,7 @@ class Child(Base):
     skills = Column(Text, nullable=True)
     
     # Relationships
-    parent_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    parent_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     parent = relationship("User", back_populates="children")
     
     # Timestamps

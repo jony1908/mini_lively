@@ -13,7 +13,7 @@ Server runs on: http://localhost:8000
 ```bash
 # First activate the virtual environment
 cd backend
-./venv/Scripts/activate
+.\venv\Scripts\activate
 
 # Then install dependencies
 pip install -r requirements.txt

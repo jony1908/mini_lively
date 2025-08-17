@@ -1,12 +1,14 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ProfileProvider } from './contexts/ProfileContext';
 import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import EmailVerification from './components/EmailVerification';
 import AuthCallback from './components/AuthCallback';
+import { ProfileForm, ProfileView } from './pages/Profile';
 import './App.css';
 
 // Landing page component
@@ -121,47 +123,67 @@ const AuthGuard = ({ children }) => {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <div className="App">
-          <Routes>
-            {/* Landing page */}
-            <Route path="/" element={<LandingPage />} />
-            
-            {/* Authentication routes */}
-            <Route 
-              path="/login" 
-              element={
-                <AuthGuard>
-                  <Login />
-                </AuthGuard>
-              } 
-            />
-            <Route 
-              path="/register" 
-              element={
-                <AuthGuard>
-                  <Register />
-                </AuthGuard>
-              } 
-            />
-            <Route path="/verify-email" element={<EmailVerification />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
-            
-            {/* Protected routes */}
-            <Route 
-              path="/dashboard" 
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } 
-            />
-            
-            {/* Catch all route */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </div>
-      </Router>
+      <ProfileProvider>
+        <Router>
+          <div className="App">
+            <Routes>
+              {/* Landing page */}
+              <Route path="/" element={<LandingPage />} />
+              
+              {/* Authentication routes */}
+              <Route 
+                path="/login" 
+                element={
+                  <AuthGuard>
+                    <Login />
+                  </AuthGuard>
+                } 
+              />
+              <Route 
+                path="/register" 
+                element={
+                  <AuthGuard>
+                    <Register />
+                  </AuthGuard>
+                } 
+              />
+              <Route path="/verify-email" element={<EmailVerification />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
+              
+              {/* Protected routes */}
+              <Route 
+                path="/dashboard" 
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              {/* Profile routes */}
+              <Route 
+                path="/profile" 
+                element={
+                  <ProtectedRoute>
+                    <ProfileView />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/profile/edit" 
+                element={
+                  <ProtectedRoute>
+                    <ProfileForm />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              {/* Catch all route */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </div>
+        </Router>
+      </ProfileProvider>
     </AuthProvider>
   );
 }
