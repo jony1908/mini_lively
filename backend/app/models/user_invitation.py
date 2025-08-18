@@ -51,10 +51,13 @@ class UserInvitation(Base):
     invitee = relationship("User", foreign_keys=[invitee_user_id], back_populates="received_invitations")
 
     def __repr__(self):
-        return f"<UserInvitation(id={self.id}, inviter_id={self.inviter_user_id}, invitee_email='{self.invitee_email}', status='{self.status.value}')>"
+        days_until_expiry = (self.expires_at - datetime.utcnow()).days if self.expires_at > datetime.utcnow() else "expired"
+        relationship_info = f" as {self.intended_relationship}" if self.intended_relationship else ""
+        return f"<UserInvitation(#{self.id}: {self.invitee_email}{relationship_info} - {self.status.value}, expires: {days_until_expiry})>"
 
     def __str__(self):
-        return f"Invitation from {self.inviter_user_id} to {self.invitee_email} - {self.status.value}"
+        relationship_part = f" (as {self.intended_relationship})" if self.intended_relationship else ""
+        return f"Invitation to {self.invitee_email}{relationship_part} - {self.status.value}"
 
     @classmethod
     def generate_invitation_token(cls) -> str:

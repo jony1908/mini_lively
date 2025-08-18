@@ -37,4 +37,32 @@ class UserProfile(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     def __repr__(self):
-        return f"<UserProfile(id={self.id}, user_id={self.user_id}, city='{self.city}', postal_code='{self.postal_code}')>"
+        location_parts = []
+        if self.city:
+            location_parts.append(self.city)
+        if self.state:
+            location_parts.append(self.state)
+        if self.postal_code:
+            location_parts.append(self.postal_code)
+        
+        location_str = ", ".join(location_parts) if location_parts else "No location"
+        
+        details = []
+        if self.phone_number:
+            details.append("has_phone")
+        if self.profile_picture_url:
+            details.append("has_avatar")
+        if self.timezone:
+            details.append(f"tz:{self.timezone}")
+        
+        details_str = f" [{', '.join(details)}]" if details else ""
+        
+        return f"<UserProfile(#{self.id} for User#{self.user_id}: {location_str}{details_str})>"
+    
+    def __str__(self):
+        location_parts = []
+        if self.city:
+            location_parts.append(self.city)
+        if self.state:
+            location_parts.append(self.state)
+        return f"<UserProfile(#{self.id}) for User {self.user}>"

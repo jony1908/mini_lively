@@ -17,3 +17,22 @@ class AdminUser(Base):
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self):
+        status_parts = []
+        if self.is_superuser:
+            status_parts.append("superuser")
+        if not self.is_active:
+            status_parts.append("inactive")
+        
+        status_str = f" [{', '.join(status_parts)}]" if status_parts else ""
+        
+        return f"<AdminUser(#{self.id}: '{self.username}'{status_str})>"
+    
+    def __str__(self):
+        status = ""
+        if self.is_superuser:
+            status += " (superuser)"
+        if not self.is_active:
+            status += " (inactive)"
+        return f"{self.username}{status}"

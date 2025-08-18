@@ -28,10 +28,12 @@ class RelationshipType(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     def __repr__(self):
-        return f"<RelationshipType(id={self.id}, name='{self.name}', display_name='{self.display_name}')>"
+        status = "active" if self.is_active else "inactive"
+        reciprocal = "reciprocal" if self.is_reciprocal else "directional"
+        return f"<RelationshipType('{self.display_name}' [{self.name}] - {status}, {reciprocal}, gen_offset={self.generation_offset})>"
 
     def __str__(self):
-        return self.display_name
+        return f"{self.display_name} ({self.name})"
 
     @classmethod
     def get_default_relationship_types(cls):

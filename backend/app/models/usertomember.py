@@ -49,10 +49,24 @@ class UserToMember(Base):
     invitation = relationship("UserInvitation")
 
     def __repr__(self):
-        return f"<UserToMember(id={self.id}, user_id={self.user_id}, member_id={self.member_id}, relation='{self.relation}')>"
+        permissions = []
+        if self.is_manager:
+            permissions.append("manager")
+        if self.is_shareable:
+            permissions.append("shareable")
+        if self.is_primary:
+            permissions.append("primary")
+        if not self.is_active:
+            permissions.append("inactive")
+        
+        permission_str = f" [{', '.join(permissions)}]" if permissions else ""
+        invitation_info = f" via_invite#{self.invitation_id}" if self.invitation_id else ""
+        
+        return f"<UserToMember(#{self.id}: User#{self.user_id} -> Member#{self.member_id} as {self.relation}{permission_str}{invitation_info})>"
 
     def __str__(self):
-        return f"User {self.user_id} -> Member {self.member_id} ({self.relation})"
+        status = " (inactive)" if not self.is_active else ""
+        return f"User {self.user_id} is {self.relation} to Member {self.member_id}{status}"
 
     @classmethod
     def create_relationship(cls, user_id: int, member_id: int, relation: str,

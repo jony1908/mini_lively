@@ -32,8 +32,20 @@ class User(Base):
     received_invitations = relationship("UserInvitation", foreign_keys="UserInvitation.invitee_user_id", back_populates="invitee")
 
     def __repr__(self):
-        name_part = f"{self.first_name or ''} {self.last_name or ''}".strip() or "No Name"
-        return f"<User(id={self.id}, email='{self.email}', name='{name_part}')>"
+        name_part = f"{self.first_name or ''} {self.last_name or ''}".strip()
+        name_display = f"'{name_part}'" if name_part else "No Name"
+        
+        status_parts = []
+        if not self.is_active:
+            status_parts.append("inactive")
+        if not self.is_verified:
+            status_parts.append("unverified")
+        if self.oauth_provider:
+            status_parts.append(f"oauth:{self.oauth_provider}")
+        
+        status_str = f" [{', '.join(status_parts)}]" if status_parts else ""
+        
+        return f"<User(#{self.id}: {name_display} <{self.email}>{status_str})>"
     
     def __str__(self):
         name_part = f"{self.first_name or ''} {self.last_name or ''}".strip()

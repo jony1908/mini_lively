@@ -45,4 +45,26 @@ class Member(Base):
         return age
 
     def __repr__(self):
-        return f"<Member(id={self.id}, name='{self.first_name} {self.last_name}', age={self.age})>"
+        name = f"{self.first_name} {self.last_name}"
+        
+        details = []
+        details.append(f"age {self.age}")
+        if self.gender:
+            details.append(self.gender)
+        if not self.is_active:
+            details.append("inactive")
+        if self.avatar_url:
+            details.append("has_avatar")
+        
+        interests_count = len(self.interests) if self.interests else 0
+        skills_count = len(self.skills) if self.skills else 0
+        if interests_count or skills_count:
+            details.append(f"{interests_count}i/{skills_count}s")
+        
+        details_str = f" [{', '.join(details)}]" if details else ""
+        
+        return f"<Member(#{self.id}: '{name}'{details_str})>"
+    
+    def __str__(self):
+        status = " (inactive)" if not self.is_active else ""
+        return f"{self.first_name} {self.last_name}, age {self.age}{status}"
