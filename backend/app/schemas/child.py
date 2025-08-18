@@ -83,6 +83,8 @@ class ChildListResponse(BaseModel):
     date_of_birth: date
     age: int
     gender: Optional[str]
+    interests: Optional[List[str]]
+    skills: Optional[List[str]]
     avatar_url: Optional[str]
     is_active: bool
 
