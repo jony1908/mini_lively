@@ -97,7 +97,7 @@ class MemberOptionsResponse(BaseModel):
     skills: List[str] = Field(..., description="List of predefined skill options")
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "interests": ["Sports", "Music", "Art", "Science", "Reading", "Gaming"],
                 "skills": ["Swimming", "Piano", "Drawing", "Cycling", "Soccer", "Basketball"]

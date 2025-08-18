@@ -22,7 +22,7 @@ from app.crud.user_invitation import (
     get_pending_invitations_for_user, update_invitation, accept_invitation,
     decline_invitation, cancel_invitation, get_invitation_by_token,
     get_invitation_preview, get_invitation_stats, validate_invitation_email,
-    expire_old_invitations
+    expire_old_invitations, get_invitation_by_id
 )
 from app.crud.relationship_type import get_relationship_options
 from app.services.relationship_calculator import RelationshipCalculator

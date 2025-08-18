@@ -8,7 +8,7 @@ from sqlalchemy import and_, or_
 from typing import Optional, List, Tuple
 from datetime import datetime, timedelta
 from ..models.user_invitation import UserInvitation, InvitationStatus
-from ..models.user import User
+from ..models.user import User  
 from ..models.usertomember import UserToMember
 from ..models.member import Member
 from ..schemas.user_invitation import UserInvitationCreate, UserInvitationUpdate
