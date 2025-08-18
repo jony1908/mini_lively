@@ -215,12 +215,15 @@ const childAPI = {
   /**
    * Upload avatar for a specific child
    * @param {number} childId - Child ID
-   * @param {File} file - Image file to upload
+   * @param {File} file - Image file to upload (will be compressed if needed)
    * @returns {Promise<Object>} Upload result with avatar URL
    */
   async uploadChildAvatar(childId, file) {
+    // Process file (compress if needed)
+    const { file: processedFile } = await this.processFileForUpload(file);
+    
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', processedFile);
 
     const response = await client.post(`/children/${childId}/avatar`, formData, {
       headers: {
@@ -269,12 +272,68 @@ const childAPI = {
   },
 
   /**
+   * Compress image file to meet size requirements
+   * @param {File} file - Image file to compress
+   * @param {number} maxSize - Maximum file size in bytes
+   * @param {number} quality - Initial quality (0.1 to 1.0)
+   * @returns {Promise<File>} Compressed file
+   */
+  async compressImage(file, maxSize = 2 * 1024 * 1024, quality = 0.8) {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onload = () => {
+        // Calculate dimensions while maintaining aspect ratio
+        const maxDimension = 1024; // Max width/height before compression
+        let { width, height } = img;
+        
+        if (width > maxDimension || height > maxDimension) {
+          if (width > height) {
+            height = (height * maxDimension) / width;
+            width = maxDimension;
+          } else {
+            width = (width * maxDimension) / height;
+            height = maxDimension;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Draw and compress
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        const tryCompress = (currentQuality) => {
+          canvas.toBlob((blob) => {
+            if (blob.size <= maxSize || currentQuality <= 0.1) {
+              // Create new file with compressed data
+              const compressedFile = new File([blob], file.name, {
+                type: 'image/jpeg',
+                lastModified: Date.now()
+              });
+              resolve(compressedFile);
+            } else {
+              // Try lower quality
+              tryCompress(currentQuality - 0.1);
+            }
+          }, 'image/jpeg', currentQuality);
+        };
+        
+        tryCompress(quality);
+      };
+      
+      img.src = URL.createObjectURL(file);
+    });
+  },
+
+  /**
    * Validate image file for avatar upload
    * @param {File} file - Image file to validate
    * @returns {Object} Validation result with isValid and error
    */
   validateAvatarFile(file) {
-    const maxSize = 2 * 1024 * 1024; // 2MB
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
 
     if (!file) {
@@ -288,14 +347,43 @@ const childAPI = {
       };
     }
 
-    if (file.size > maxSize) {
-      return { 
-        isValid: false, 
-        error: 'Image must be smaller than 2MB' 
-      };
-    }
-
+    // Remove size check - we'll compress if needed
     return { isValid: true };
+  },
+
+  /**
+   * Process file for upload - compress if necessary
+   * @param {File} file - Original file
+   * @returns {Promise<{file: File, wasCompressed: boolean}>}
+   */
+  async processFileForUpload(file) {
+    const maxSize = 2 * 1024 * 1024; // 2MB
+    
+    if (file.size <= maxSize) {
+      return { file, wasCompressed: false };
+    }
+    
+    const compressedFile = await this.compressImage(file, maxSize);
+    return { file: compressedFile, wasCompressed: true };
+  },
+
+  /**
+   * Create a preview URL for selected image
+   * @param {File} file - Image file
+   * @returns {string} Preview URL
+   */
+  createPreviewUrl(file) {
+    return URL.createObjectURL(file);
+  },
+
+  /**
+   * Cleanup preview URL to prevent memory leaks
+   * @param {string} url - Preview URL to cleanup
+   */
+  cleanupPreviewUrl(url) {
+    if (url && url.startsWith('blob:')) {
+      URL.revokeObjectURL(url);
+    }
   }
 };
 

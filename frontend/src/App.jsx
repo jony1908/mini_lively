@@ -12,6 +12,8 @@ import AuthCallback from './components/AuthCallback';
 import { ProfileForm, ProfileView } from './pages/Profile';
 import ChildrenList from './components/Children/ChildrenList';
 import AddChildForm from './components/Children/AddChildForm';
+import ChildProfileView from './components/Children/ChildProfileView';
+import EditChildForm from './components/Children/EditChildForm';
 import './App.css';
 
 // Landing page component
@@ -196,6 +198,22 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <AddChildForm />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/children/:childId" 
+                element={
+                  <ProtectedRoute>
+                    <ChildProfileView />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/children/edit/:childId" 
+                element={
+                  <ProtectedRoute>
+                    <EditChildForm />
                   </ProtectedRoute>
                 } 
               />

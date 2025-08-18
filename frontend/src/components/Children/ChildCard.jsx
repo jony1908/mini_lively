@@ -8,9 +8,12 @@
  */
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import childAPI from '../../services/child';
 
 const ChildCard = ({ child, onEdit, onDelete }) => {
+  const navigate = useNavigate();
+
   const handleEdit = () => {
     onEdit(child.id);
   };
@@ -21,8 +24,19 @@ const ChildCard = ({ child, onEdit, onDelete }) => {
     }
   };
 
+  const handleCardClick = (e) => {
+    // Don't navigate if clicking on action buttons
+    if (e.target.closest('button')) {
+      return;
+    }
+    navigate(`/children/${child.id}`);
+  };
+
   return (
-    <div className="bg-[#f4f0e6] rounded-xl p-6 hover:shadow-md transition-shadow">
+    <div 
+      className="bg-[#f4f0e6] rounded-xl p-6 hover:shadow-md transition-shadow cursor-pointer"
+      onClick={handleCardClick}
+    >
       {/* Header with avatar, name, age and actions */}
       <div className="flex items-start gap-4 mb-4">
         {/* Avatar */}
@@ -61,7 +75,7 @@ const ChildCard = ({ child, onEdit, onDelete }) => {
         <div className="flex gap-2 flex-shrink-0">
           <button
             onClick={handleEdit}
-            className="p-2 text-[#9e8747] hover:text-[#1c180d] hover:bg-[#e9e2ce] rounded-lg transition-colors"
+            className="p-2 bg-[#fac638] text-[#1c180d] hover:bg-[#e9b429] rounded-lg transition-colors"
             title="Edit child"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256">
@@ -70,7 +84,7 @@ const ChildCard = ({ child, onEdit, onDelete }) => {
           </button>
           <button
             onClick={handleDelete}
-            className="p-2 text-[#9e8747] hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            className="p-2 bg-red-100 text-red-600 hover:bg-red-200 rounded-lg transition-colors"
             title="Remove child"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256">

@@ -25,6 +25,7 @@ const ChildAvatarUpload = ({
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [compressionInfo, setCompressionInfo] = useState(null);
   const fileInputRef = useRef(null);
 
   // Update preview when current avatar changes
@@ -37,8 +38,8 @@ const ChildAvatarUpload = ({
   // Cleanup preview URL on unmount
   useEffect(() => {
     return () => {
-      if (previewUrl && previewUrl !== currentAvatarUrl && previewUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(previewUrl);
+      if (previewUrl && previewUrl !== currentAvatarUrl) {
+        childAPI.cleanupPreviewUrl(previewUrl);
       }
     };
   }, [previewUrl, currentAvatarUrl]);
@@ -59,16 +60,32 @@ const ChildAvatarUpload = ({
 
     setError('');
     setProcessing(true);
+    setCompressionInfo(null);
 
     try {
-      setSelectedFile(file);
+      // Process file (compress if needed)
+      const { file: processedFile, wasCompressed } = await childAPI.processFileForUpload(file);
       
-      // Create preview
-      if (previewUrl && previewUrl !== currentAvatarUrl && previewUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(previewUrl);
+      setSelectedFile(processedFile);
+      
+      // Set compression info
+      if (wasCompressed) {
+        const originalSizeMB = (file.size / (1024 * 1024)).toFixed(1);
+        const compressedSizeMB = (processedFile.size / (1024 * 1024)).toFixed(1);
+        setCompressionInfo({
+          original: originalSizeMB,
+          compressed: compressedSizeMB
+        });
       }
       
-      const newPreviewUrl = URL.createObjectURL(file);
+      // Create preview
+      const newPreviewUrl = childAPI.createPreviewUrl(processedFile);
+      
+      // Cleanup old preview if it exists
+      if (previewUrl && previewUrl !== currentAvatarUrl) {
+        childAPI.cleanupPreviewUrl(previewUrl);
+      }
+      
       setPreviewUrl(newPreviewUrl);
     } catch (err) {
       setError('Failed to process image. Please try a different file.');
@@ -152,13 +169,14 @@ const ChildAvatarUpload = ({
    * Cancel file selection
    */
   const handleCancel = () => {
-    if (previewUrl && previewUrl !== currentAvatarUrl && previewUrl.startsWith('blob:')) {
-      URL.revokeObjectURL(previewUrl);
+    if (previewUrl && previewUrl !== currentAvatarUrl) {
+      childAPI.cleanupPreviewUrl(previewUrl);
     }
     
     setSelectedFile(null);
     setPreviewUrl(currentAvatarUrl);
     setError('');
+    setCompressionInfo(null);
     
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -213,7 +231,7 @@ const ChildAvatarUpload = ({
                   />
                   <button
                     type="button"
-                    className="text-xs bg-[#f4f0e6] text-[#1c180d] px-3 py-1.5 rounded-lg hover:bg-[#e9e2ce] transition-colors cursor-pointer"
+                    className="text-xs bg-[#fac638] text-[#1c180d] px-3 py-1.5 rounded-lg hover:bg-[#e9b429] transition-colors cursor-pointer font-medium"
                     onClick={() => fileInputRef.current?.click()}
                   >
                     Choose Photo
@@ -322,6 +340,11 @@ const ChildAvatarUpload = ({
             <p className="text-[#9e8747] text-xs mt-1">
               Will be resized to 256×256 pixels
             </p>
+            {compressionInfo && (
+              <p className="text-green-600 text-xs mt-1">
+                Compressed from {compressionInfo.original}MB to {compressionInfo.compressed}MB
+              </p>
+            )}
           </div>
         )}
 
@@ -376,7 +399,7 @@ const ChildAvatarUpload = ({
                 />
                 <button
                   type="button"
-                  className="flex items-center justify-center overflow-hidden rounded-xl h-10 px-6 bg-[#f4f0e6] text-[#1c180d] text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#e9e2ce] transition-colors cursor-pointer"
+                  className="flex items-center justify-center overflow-hidden rounded-xl h-10 px-6 bg-[#fac638] text-[#1c180d] text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#e9b429] transition-colors cursor-pointer"
                   onClick={() => fileInputRef.current?.click()}
                 >
                   Choose Photo
@@ -421,7 +444,7 @@ const ChildAvatarUpload = ({
 
         {/* Upload guidelines */}
         <div className="text-center text-xs text-[#9e8747] max-w-sm">
-          <p>Images will be automatically compressed if needed</p>
+          <p>Large images will be automatically compressed</p>
           <p>Supported formats: JPEG, PNG, WEBP</p>
           <p>Images will be resized to 256×256 pixels</p>
         </div>
