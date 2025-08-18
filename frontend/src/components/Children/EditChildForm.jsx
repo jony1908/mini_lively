@@ -14,10 +14,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import MultiSelect from '../common/MultiSelect';
 import DatePicker from '../common/DatePicker';
 import ChildAvatarUpload from './ChildAvatarUpload';
-import childAPI from '../../services/child';
+import memberAPI from '../../services/member';
 
 const EditChildForm = () => {
-  const { childId } = useParams();
+  const { memberId } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -45,8 +45,8 @@ const EditChildForm = () => {
 
         // Load child data and options in parallel
         const [childData, optionsData] = await Promise.all([
-          childAPI.getChild(childId),
-          childAPI.getChildOptions()
+          memberAPI.getMember(memberId),
+          memberAPI.getMemberOptions()
         ]);
 
         setOriginalChild(childData);
@@ -73,10 +73,10 @@ const EditChildForm = () => {
       }
     };
 
-    if (childId) {
+    if (memberId) {
       loadData();
     }
-  }, [childId]);
+  }, [memberId]);
 
   // Handle input changes
   const handleInputChange = (e) => {
@@ -129,7 +129,7 @@ const EditChildForm = () => {
   // Calculate age from date of birth for display
   const getAge = () => {
     if (!formData.date_of_birth) return null;
-    return childAPI.calculateAge(formData.date_of_birth);
+    return memberAPI.calculateAge(formData.date_of_birth);
   };
 
   // Get age display text
@@ -171,7 +171,7 @@ const EditChildForm = () => {
     const validationData = { ...formData };
     delete validationData.avatar_url;
     
-    const validation = childAPI.validateChildData(validationData);
+    const validation = memberAPI.validateMemberData(validationData);
     if (!validation.isValid) {
       const newErrors = {};
       validation.errors.forEach(error => {
@@ -194,10 +194,10 @@ const EditChildForm = () => {
       const updateData = { ...formData };
       delete updateData.avatar_url;
       
-      const updatedChild = await childAPI.updateChild(childId, updateData);
+      const updatedMember = await memberAPI.updateMember(memberId, updateData);
       
       // Navigate to child profile with success message
-      navigate(`/children/${childId}`, { 
+      navigate(`/members/${memberId}`, { 
         state: { 
           message: `${formData.first_name} ${formData.last_name}'s profile has been updated successfully!` 
         }
@@ -217,10 +217,10 @@ const EditChildForm = () => {
   const handleBack = () => {
     if (hasChanges() && !submitting) {
       if (window.confirm('You have unsaved changes. Are you sure you want to leave?')) {
-        navigate(`/children/${childId}`);
+        navigate(`/members/${memberId}`);
       }
     } else {
-      navigate(`/children/${childId}`);
+      navigate(`/members/${memberId}`);
     }
   };
 
@@ -357,7 +357,7 @@ const EditChildForm = () => {
         <div className="py-3">
           <p className="text-[#1c180d] text-base font-medium leading-normal pb-3">Gender</p>
           <div className="flex flex-wrap gap-3">
-            {childAPI.getGenderOptions().map((option) => (
+            {memberAPI.getGenderOptions().map((option) => (
               <label
                 key={option.value}
                 className={`text-sm font-medium leading-normal flex items-center justify-center rounded-xl border px-4 h-11 cursor-pointer transition-all ${
@@ -417,7 +417,7 @@ const EditChildForm = () => {
           <p className="text-[#1c180d] text-base font-medium leading-normal pb-3">Profile Photo</p>
           <div className="bg-[#f4f0e6] rounded-xl p-4">
             <ChildAvatarUpload
-              childId={childId}
+              memberId={memberId}
               childName={formData.first_name || 'Child'}
               currentAvatarUrl={formData.avatar_url}
               onAvatarUpdate={handleAvatarUpdate}

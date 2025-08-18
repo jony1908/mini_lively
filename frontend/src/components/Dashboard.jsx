@@ -1,13 +1,13 @@
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useProfile } from '../contexts/ProfileContext';
-import { useChild } from '../contexts/ChildContext';
+import { useMember } from '../contexts/MemberContext';
 import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
   const { profile, getProfileCompletionPercentage } = useProfile();
-  const { children, getChildrenCount, getChildrenStats } = useChild();
+  const { members, getMembersCount, getMembersStats } = useMember();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -24,11 +24,11 @@ const Dashboard = () => {
   };
 
   const handleManageChildren = () => {
-    navigate('/children');
+    navigate('/members');
   };
 
   const handleAddChild = () => {
-    navigate('/children/add');
+    navigate('/members/add');
   };
 
   return (
@@ -120,26 +120,26 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {children.length > 0 ? (
+          {members.length > 0 ? (
             <>
               {/* Children Statistics */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                 <div className="text-center p-3 bg-[#fcfbf8] rounded-lg">
-                  <div className="text-2xl font-bold text-[#fac638]">{getChildrenStats().totalChildren}</div>
+                  <div className="text-2xl font-bold text-[#fac638]">{getMembersStats().totalMembers}</div>
                   <div className="text-sm text-[#9e8747]">
-                    {getChildrenStats().totalChildren === 1 ? 'Child' : 'Children'}
+                    {getMembersStats().totalMembers === 1 ? 'Member' : 'Members'}
                   </div>
                 </div>
                 <div className="text-center p-3 bg-[#fcfbf8] rounded-lg">
-                  <div className="text-2xl font-bold text-[#fac638]">{getChildrenStats().averageAge}</div>
+                  <div className="text-2xl font-bold text-[#fac638]">{getMembersStats().averageAge}</div>
                   <div className="text-sm text-[#9e8747]">Avg Age</div>
                 </div>
                 <div className="text-center p-3 bg-[#fcfbf8] rounded-lg">
-                  <div className="text-2xl font-bold text-[#fac638]">{getChildrenStats().totalInterests}</div>
+                  <div className="text-2xl font-bold text-[#fac638]">{getMembersStats().totalInterests}</div>
                   <div className="text-sm text-[#9e8747]">Interests</div>
                 </div>
                 <div className="text-center p-3 bg-[#fcfbf8] rounded-lg">
-                  <div className="text-2xl font-bold text-[#fac638]">{getChildrenStats().totalSkills}</div>
+                  <div className="text-2xl font-bold text-[#fac638]">{getMembersStats().totalSkills}</div>
                   <div className="text-sm text-[#9e8747]">Skills</div>
                 </div>
               </div>
@@ -147,15 +147,15 @@ const Dashboard = () => {
               {/* Recent Children Preview */}
               <div className="space-y-3">
                 <h3 className="text-[#1c180d] font-medium">Recent Children</h3>
-                {children.slice(0, 3).map((child) => (
-                  <div key={child.id} className="flex items-center gap-3 p-3 bg-[#fcfbf8] rounded-lg">
+                {members.slice(0, 3).map((member) => (
+                  <div key={member.id} className="flex items-center gap-3 p-3 bg-[#fcfbf8] rounded-lg">
                     {/* Child Avatar */}
                     <div className="flex-shrink-0">
                       <div className="w-12 h-12 rounded-full overflow-hidden bg-[#e9e2ce] border-2 border-[#d1c9b3]">
-                        {child.avatar_url ? (
+                        {member.avatar_url ? (
                           <img 
-                            src={child.avatar_url} 
-                            alt={`${child.first_name} ${child.last_name} avatar`} 
+                            src={member.avatar_url} 
+                            alt={`${member.first_name} ${member.last_name} avatar`} 
                             className="w-full h-full object-cover"
                           />
                         ) : (
@@ -171,33 +171,33 @@ const Dashboard = () => {
                     {/* Child Info */}
                     <div className="flex-1 min-w-0">
                       <div className="font-medium text-[#1c180d]">
-                        {child.first_name} {child.last_name}
+                        {member.first_name} {member.last_name}
                       </div>
                       <div className="text-sm text-[#9e8747]">
-                        {child.age} years old
-                        {child.interests && child.interests.length > 0 && (
-                          <span className="ml-2">• {child.interests.length} interests</span>
+                        {member.age} years old
+                        {member.interests && member.interests.length > 0 && (
+                          <span className="ml-2">• {member.interests.length} interests</span>
                         )}
                       </div>
                     </div>
 
                     {/* Gender Badge */}
                     <div className="flex-shrink-0">
-                      {child.gender && (
+                      {member.gender && (
                         <span className="px-2 py-1 bg-[#e9e2ce] rounded text-xs text-[#9e8747]">
-                          {child.gender}
+                          {member.gender}
                         </span>
                       )}
                     </div>
                   </div>
                 ))}
-                {children.length > 3 && (
+                {members.length > 3 && (
                   <div className="text-center">
                     <button
                       onClick={handleManageChildren}
                       className="text-[#fac638] hover:underline text-sm font-medium"
                     >
-                      View all {children.length} children
+                      View all {members.length} members
                     </button>
                   </div>
                 )}
@@ -220,7 +220,7 @@ const Dashboard = () => {
               </div>
               <h3 className="text-[#1c180d] font-medium mb-2">No Children Added</h3>
               <p className="text-[#9e8747] text-sm mb-4">
-                Start by adding your children to track their activities and manage their schedules.
+                Start by adding family members to track their activities and manage their schedules.
               </p>
               <button
                 onClick={handleAddChild}

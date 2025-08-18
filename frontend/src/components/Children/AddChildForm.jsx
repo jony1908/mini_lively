@@ -13,7 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import MultiSelect from '../common/MultiSelect';
 import DatePicker from '../common/DatePicker';
 import ChildAvatarUpload from './ChildAvatarUpload';
-import childAPI from '../../services/child';
+import memberAPI from '../../services/member';
 
 const AddChildForm = () => {
   const navigate = useNavigate();
@@ -41,7 +41,7 @@ const AddChildForm = () => {
     const loadOptions = async () => {
       try {
         setLoading(true);
-        const optionsData = await childAPI.getChildOptions();
+        const optionsData = await memberAPI.getMemberOptions();
         setOptions(optionsData);
       } catch (error) {
         console.error('Failed to load options:', error);
@@ -104,7 +104,7 @@ const AddChildForm = () => {
   // Calculate age from date of birth for display
   const getAge = () => {
     if (!formData.date_of_birth) return null;
-    return childAPI.calculateAge(formData.date_of_birth);
+    return memberAPI.calculateAge(formData.date_of_birth);
   };
 
   // Get age display text
@@ -131,7 +131,7 @@ const AddChildForm = () => {
     const validationData = { ...formData };
     delete validationData.avatar_url;
     
-    const validation = childAPI.validateChildData(validationData);
+    const validation = memberAPI.validateMemberData(validationData);
     if (!validation.isValid) {
       const newErrors = {};
       validation.errors.forEach(error => {
@@ -154,11 +154,11 @@ const AddChildForm = () => {
       const childData = { ...formData };
       delete childData.avatar_url;
       
-      const newChild = await childAPI.createChild(childData);
-      setChildId(newChild.id);
+      const newMember = await memberAPI.createMember(childData);
+      setChildId(newMember.id);
       
       // Navigate back to children list with success message
-      navigate('/children', { 
+      navigate('/members', { 
         state: { 
           message: `${formData.first_name} ${formData.last_name} has been added successfully!` 
         }
@@ -176,7 +176,7 @@ const AddChildForm = () => {
 
   // Handle back navigation
   const handleBack = () => {
-    navigate('/children');
+    navigate('/members');
   };
 
   return (
@@ -265,7 +265,7 @@ const AddChildForm = () => {
         <div className="py-3">
           <p className="text-[#1c180d] text-base font-medium leading-normal pb-3">Gender</p>
           <div className="flex flex-wrap gap-3">
-            {childAPI.getGenderOptions().map((option) => (
+            {memberAPI.getGenderOptions().map((option) => (
               <label
                 key={option.value}
                 className={`text-sm font-medium leading-normal flex items-center justify-center rounded-xl border px-4 h-11 cursor-pointer transition-all ${

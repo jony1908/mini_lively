@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ProfileProvider } from './contexts/ProfileContext';
-import { ChildProvider } from './contexts/ChildContext';
+import { MemberProvider } from './contexts/MemberContext';
 import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Dashboard';
@@ -129,7 +129,7 @@ function App() {
   return (
     <AuthProvider>
       <ProfileProvider>
-        <ChildProvider>
+        <MemberProvider>
           <Router>
           <div className="App">
             <Routes>
@@ -184,9 +184,9 @@ function App() {
                 } 
               />
 
-              {/* Children routes */}
+              {/* Members routes */}
               <Route 
-                path="/children" 
+                path="/members" 
                 element={
                   <ProtectedRoute>
                     <ChildrenList />
@@ -194,7 +194,7 @@ function App() {
                 } 
               />
               <Route 
-                path="/children/add" 
+                path="/members/add" 
                 element={
                   <ProtectedRoute>
                     <AddChildForm />
@@ -202,7 +202,7 @@ function App() {
                 } 
               />
               <Route 
-                path="/children/:childId" 
+                path="/members/:memberId" 
                 element={
                   <ProtectedRoute>
                     <ChildProfileView />
@@ -210,7 +210,7 @@ function App() {
                 } 
               />
               <Route 
-                path="/children/edit/:childId" 
+                path="/members/edit/:memberId" 
                 element={
                   <ProtectedRoute>
                     <EditChildForm />
@@ -223,7 +223,7 @@ function App() {
             </Routes>
           </div>
           </Router>
-        </ChildProvider>
+        </MemberProvider>
       </ProfileProvider>
     </AuthProvider>
   );

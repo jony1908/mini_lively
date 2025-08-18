@@ -11,10 +11,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ChildAvatarUpload from './ChildAvatarUpload';
-import childAPI from '../../services/child';
+import memberAPI from '../../services/member';
 
 const ChildProfileView = () => {
-  const { childId } = useParams();
+  const { memberId } = useParams();
   const navigate = useNavigate();
   const [child, setChild] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -27,7 +27,7 @@ const ChildProfileView = () => {
       try {
         setLoading(true);
         setError('');
-        const childData = await childAPI.getChild(childId);
+        const childData = await memberAPI.getMember(memberId);
         setChild(childData);
       } catch (err) {
         console.error('Failed to load child:', err);
@@ -37,10 +37,10 @@ const ChildProfileView = () => {
       }
     };
 
-    if (childId) {
+    if (memberId) {
       loadChild();
     }
-  }, [childId]);
+  }, [memberId]);
 
   // Handle avatar update
   const handleAvatarUpdate = (avatarUrl) => {
@@ -50,17 +50,17 @@ const ChildProfileView = () => {
 
   // Handle edit child
   const handleEdit = () => {
-    navigate(`/children/edit/${childId}`);
+    navigate(`/members/edit/${memberId}`);
   };
 
   // Handle delete child
   const handleDelete = async () => {
     if (!child) return;
     
-    if (window.confirm(`Are you sure you want to remove ${childAPI.getChildFullName(child)}? This action cannot be undone.`)) {
+    if (window.confirm(`Are you sure you want to remove ${memberAPI.getMemberFullName(child)}? This action cannot be undone.`)) {
       try {
-        await childAPI.deleteChild(childId);
-        navigate('/children', { 
+        await memberAPI.deleteMember(memberId);
+        navigate('/members', { 
           state: { 
             message: `${child.first_name} ${child.last_name} has been removed successfully.` 
           }
@@ -74,7 +74,7 @@ const ChildProfileView = () => {
 
   // Handle back navigation
   const handleBack = () => {
-    navigate('/children');
+    navigate('/members');
   };
 
   // Calculate age display
@@ -152,7 +152,7 @@ const ChildProfileView = () => {
           </svg>
         </button>
         <h2 className="text-[#1c180d] text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-12">
-          {childAPI.getChildFullName(child)}
+          {memberAPI.getMemberFullName(child)}
         </h2>
       </div>
 
@@ -174,7 +174,7 @@ const ChildProfileView = () => {
                 {child.avatar_url ? (
                   <img 
                     src={child.avatar_url} 
-                    alt={`${childAPI.getChildFullName(child)} avatar`} 
+                    alt={`${memberAPI.getMemberFullName(child)} avatar`} 
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -188,7 +188,7 @@ const ChildProfileView = () => {
               
               {/* Avatar Upload */}
               <ChildAvatarUpload
-                childId={child.id}
+                memberId={child.id}
                 childName={child.first_name}
                 currentAvatarUrl={child.avatar_url}
                 onAvatarUpdate={handleAvatarUpdate}
@@ -200,7 +200,7 @@ const ChildProfileView = () => {
             {/* Basic Information */}
             <div className="flex-1">
               <h1 className="text-[#1c180d] text-2xl font-bold leading-tight mb-2">
-                {childAPI.getChildFullName(child)}
+                {memberAPI.getMemberFullName(child)}
               </h1>
               
               <div className="space-y-2 text-[#9e8747]">

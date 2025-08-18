@@ -9,7 +9,7 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import childAPI from '../../services/child';
+import memberAPI from '../../services/member';
 
 const ChildAvatarUpload = ({ 
   childId, 
@@ -39,7 +39,7 @@ const ChildAvatarUpload = ({
   useEffect(() => {
     return () => {
       if (previewUrl && previewUrl !== currentAvatarUrl) {
-        childAPI.cleanupPreviewUrl(previewUrl);
+        memberAPI.cleanupPreviewUrl(previewUrl);
       }
     };
   }, [previewUrl, currentAvatarUrl]);
@@ -52,7 +52,7 @@ const ChildAvatarUpload = ({
     if (!file) return;
 
     // Validate file
-    const validation = childAPI.validateAvatarFile(file);
+    const validation = memberAPI.validateAvatarFile(file);
     if (!validation.isValid) {
       setError(validation.error);
       return;
@@ -64,7 +64,7 @@ const ChildAvatarUpload = ({
 
     try {
       // Process file (compress if needed)
-      const { file: processedFile, wasCompressed } = await childAPI.processFileForUpload(file);
+      const { file: processedFile, wasCompressed } = await memberAPI.processFileForUpload(file);
       
       setSelectedFile(processedFile);
       
@@ -79,11 +79,11 @@ const ChildAvatarUpload = ({
       }
       
       // Create preview
-      const newPreviewUrl = childAPI.createPreviewUrl(processedFile);
+      const newPreviewUrl = memberAPI.createPreviewUrl(processedFile);
       
       // Cleanup old preview if it exists
       if (previewUrl && previewUrl !== currentAvatarUrl) {
-        childAPI.cleanupPreviewUrl(previewUrl);
+        memberAPI.cleanupPreviewUrl(previewUrl);
       }
       
       setPreviewUrl(newPreviewUrl);
@@ -110,7 +110,7 @@ const ChildAvatarUpload = ({
         setUploadProgress(prev => Math.min(prev + 10, 90));
       }, 100);
 
-      const result = await childAPI.uploadChildAvatar(childId, selectedFile);
+      const result = await memberAPI.uploadMemberAvatar(childId, selectedFile);
       
       clearInterval(progressInterval);
       setUploadProgress(100);
@@ -144,7 +144,7 @@ const ChildAvatarUpload = ({
     if (!currentAvatarUrl || !childId) return;
 
     try {
-      await childAPI.removeChildAvatar(childId);
+      await memberAPI.removeMemberAvatar(childId);
       
       // Update parent component
       if (onAvatarUpdate) {
@@ -170,7 +170,7 @@ const ChildAvatarUpload = ({
    */
   const handleCancel = () => {
     if (previewUrl && previewUrl !== currentAvatarUrl) {
-      childAPI.cleanupPreviewUrl(previewUrl);
+      memberAPI.cleanupPreviewUrl(previewUrl);
     }
     
     setSelectedFile(null);
