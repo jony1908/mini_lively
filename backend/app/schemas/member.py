@@ -3,14 +3,14 @@ from datetime import date, datetime
 from typing import Optional, List
 
 
-class ChildBase(BaseModel):
-    first_name: str = Field(..., min_length=1, max_length=50, description="Child's first name")
-    last_name: str = Field(..., min_length=1, max_length=50, description="Child's last name")
-    date_of_birth: date = Field(..., description="Child's date of birth")
-    gender: Optional[str] = Field(None, max_length=20, description="Child's gender (optional)")
-    interests: Optional[List[str]] = Field(None, description="Child's interests and hobbies as a list")
-    skills: Optional[List[str]] = Field(None, description="Child's current skills and abilities as a list")
-    avatar_url: Optional[str] = Field(None, description="URL to child's avatar image")
+class MemberBase(BaseModel):
+    first_name: str = Field(..., min_length=1, max_length=50, description="Member's first name")
+    last_name: str = Field(..., min_length=1, max_length=50, description="Member's last name")
+    date_of_birth: date = Field(..., description="Member's date of birth")
+    gender: Optional[str] = Field(None, max_length=20, description="Member's gender (optional)")
+    interests: Optional[List[str]] = Field(None, description="Member's interests and hobbies as a list")
+    skills: Optional[List[str]] = Field(None, description="Member's current skills and abilities as a list")
+    avatar_url: Optional[str] = Field(None, description="URL to member's avatar image")
 
     @validator('date_of_birth')
     def validate_date_of_birth(cls, v):
@@ -43,18 +43,18 @@ class ChildBase(BaseModel):
         return v if v else None
 
 
-class ChildCreate(ChildBase):
-    pass  # parent_id will be automatically set from JWT token
+class MemberCreate(MemberBase):
+    pass
 
 
-class ChildUpdate(BaseModel):
+class MemberUpdate(BaseModel):
     first_name: Optional[str] = Field(None, min_length=1, max_length=50)
     last_name: Optional[str] = Field(None, min_length=1, max_length=50)
     date_of_birth: Optional[date] = Field(None)
     gender: Optional[str] = Field(None, max_length=20)
-    interests: Optional[List[str]] = Field(None, description="Child's interests and hobbies as a list")
-    skills: Optional[List[str]] = Field(None, description="Child's current skills and abilities as a list")
-    avatar_url: Optional[str] = Field(None, description="URL to child's avatar image")
+    interests: Optional[List[str]] = Field(None, description="Member's interests and hobbies as a list")
+    skills: Optional[List[str]] = Field(None, description="Member's current skills and abilities as a list")
+    avatar_url: Optional[str] = Field(None, description="URL to member's avatar image")
     is_active: Optional[bool] = Field(None)
 
     @validator('date_of_birth')
@@ -64,9 +64,8 @@ class ChildUpdate(BaseModel):
         return v
 
 
-class ChildResponse(ChildBase):
+class MemberResponse(MemberBase):
     id: int
-    parent_id: int
     age: int
     created_at: datetime
     updated_at: datetime
@@ -76,7 +75,7 @@ class ChildResponse(ChildBase):
         from_attributes = True
 
 
-class ChildListResponse(BaseModel):
+class MemberListResponse(BaseModel):
     id: int
     first_name: str
     last_name: str
@@ -92,8 +91,8 @@ class ChildListResponse(BaseModel):
         from_attributes = True
 
 
-class ChildOptionsResponse(BaseModel):
-    """Predefined options for child interests and skills"""
+class MemberOptionsResponse(BaseModel):
+    """Predefined options for member interests and skills"""
     interests: List[str] = Field(..., description="List of predefined interest options")
     skills: List[str] = Field(..., description="List of predefined skill options")
     

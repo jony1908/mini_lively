@@ -2,7 +2,7 @@ from sqladmin import ModelView
 from sqladmin.filters import BooleanFilter, AllUniqueStringValuesFilter
 from ..models.user import User
 from ..models.admin_user import AdminUser
-from ..models.child import Child
+from ..models.member import Member
 from ..models.user_profile import UserProfile
 
 
@@ -10,7 +10,7 @@ class BasicUserAdmin(ModelView, model=User):
     # Basic working configuration
     name = "User"
     name_plural = "Users"
-    category = "User Management"
+    category = "Relationships"
     icon = "fa-solid fa-user"
     column_list = ["id", "email", "first_name", "last_name", "is_active"]
     form_excluded_columns = ["password_hash"]
@@ -28,26 +28,26 @@ class BasicAdminUserAdmin(ModelView, model=AdminUser):
     page_size = 25
 
 
-class BasicChildAdmin(ModelView, model=Child):
-    # Minimal working configuration for Child model
-    name = "Child"
-    name_plural = "Children"
-    category = "Content"
-    icon = "fa-solid fa-child"
+class BasicMemberAdmin(ModelView, model=Member):
+    # Minimal working configuration for Member model
+    name = "Member"
+    name_plural = "Members"
+    category = "Relationships"
+    icon = "fa-solid fa-users"
     
-    # Basic display with parent information and computed age
-    column_list = ["id", "first_name", "last_name", "age", "date_of_birth", "gender", "parent.email", "is_active"]
+    # Basic display with computed age
+    column_list = ["id", "first_name", "last_name", "age", "date_of_birth", "gender", "is_active"]
     
     # Proper SQLAdmin filters using available filter classes
     column_filters = [
-        BooleanFilter(column=Child.is_active, title="Active Status"),
-        AllUniqueStringValuesFilter(column=Child.gender, title="Gender")
+        BooleanFilter(column=Member.is_active, title="Active Status"),
+        AllUniqueStringValuesFilter(column=Member.gender, title="Gender")
     ]
     
-    # Search functionality - simplified to avoid duplicate table joins
-    column_searchable_list = ["first_name", "last_name", "parent.email"]
+    # Search functionality
+    column_searchable_list = ["first_name", "last_name"]
     
-    # Detailed view with complete child and parent information
+    # Detailed view with complete member information
     column_details_list = [
         "id",
         "first_name",
@@ -57,9 +57,7 @@ class BasicChildAdmin(ModelView, model=Child):
         "gender",
         "interests",
         "skills",
-        "parent.email",
-        "parent.first_name",
-        "parent.last_name",
+        "avatar_url",
         "is_active",
         "created_at",
         "updated_at"
@@ -76,7 +74,7 @@ class BasicUserProfileAdmin(ModelView, model=UserProfile):
     # Basic working configuration
     name = "User Profile"
     name_plural = "User Profiles"
-    category = "User Management"
+    category = "Relationships"
     icon = "fa-solid fa-id-card"
     
     # Basic display with user information

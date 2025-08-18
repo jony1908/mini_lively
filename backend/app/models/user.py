@@ -26,8 +26,10 @@ class User(Base):
     is_verified = Column(Boolean, default=False)
     
     # Relationships
-    children = relationship("Child", back_populates="parent", cascade="all, delete-orphan")
     profile = relationship("UserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    member_relationships = relationship("UserToMember", foreign_keys="UserToMember.user_id", back_populates="user", cascade="all, delete-orphan")
+    sent_invitations = relationship("UserInvitation", foreign_keys="UserInvitation.inviter_user_id", back_populates="inviter", cascade="all, delete-orphan")
+    received_invitations = relationship("UserInvitation", foreign_keys="UserInvitation.invitee_user_id", back_populates="invitee")
 
     def __repr__(self):
         name_part = f"{self.first_name or ''} {self.last_name or ''}".strip() or "No Name"

@@ -10,10 +10,12 @@ from .database.connection import get_db, init_db
 from .routers.auth import router as auth_router
 from .routers.profile import router as profile_router
 from .routers.avatar import router as avatar_router
-from .routers.child import router as child_router
+from .routers.member import router as member_router
+from .routers.invitation import router as invitation_router
+from .routers.relationship import router as relationship_router
 from .config.settings import settings
 from .admin.config import create_admin
-from .admin.basic_views import BasicUserAdmin, BasicAdminUserAdmin, BasicChildAdmin, BasicUserProfileAdmin
+from .admin.basic_views import BasicUserAdmin, BasicAdminUserAdmin, BasicMemberAdmin, BasicUserProfileAdmin
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -45,7 +47,9 @@ app.add_middleware(
 app.include_router(auth_router, prefix="/api")
 app.include_router(profile_router, prefix="/api")
 app.include_router(avatar_router, prefix="/api")
-app.include_router(child_router, prefix="/api")
+app.include_router(member_router, prefix="/api")
+app.include_router(invitation_router, prefix="/api")
+app.include_router(relationship_router, prefix="/api")
 
 # Create uploads directory and mount static files
 uploads_dir = "uploads"
@@ -56,7 +60,7 @@ app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 admin = create_admin(app)
 admin.add_view(BasicUserAdmin)
 admin.add_view(BasicAdminUserAdmin)
-admin.add_view(BasicChildAdmin)
+admin.add_view(BasicMemberAdmin)
 admin.add_view(BasicUserProfileAdmin)
 
 @app.get("/")

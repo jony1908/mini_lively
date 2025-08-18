@@ -1,11 +1,11 @@
-from sqlalchemy import Column, Integer, String, Date, Text, DateTime, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Date, Text, DateTime, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime, date
 from .base import Base
 
 
-class Child(Base):
-    __tablename__ = "children"
+class Member(Base):
+    __tablename__ = "members"
 
     id = Column(Integer, primary_key=True, index=True)
     first_name = Column(String, nullable=False)
@@ -18,9 +18,6 @@ class Child(Base):
     skills = Column(Text, nullable=True)
     avatar_url = Column(String, nullable=True)
     
-    # Relationships
-    parent_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    parent = relationship("User", back_populates="children")
     
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -28,10 +25,13 @@ class Child(Base):
     
     # Status
     is_active = Column(Boolean, default=True)
+    
+    # Relationships
+    user_relationships = relationship("UserToMember", back_populates="member", cascade="all, delete-orphan")
 
     @property
     def age(self) -> int:
-        """Calculate and return the child's current age in years."""
+        """Calculate and return the member's current age in years."""
         today = date.today()
         birth_date = self.date_of_birth
         
@@ -45,4 +45,4 @@ class Child(Base):
         return age
 
     def __repr__(self):
-        return f"<Child(id={self.id}, name='{self.first_name} {self.last_name}', age={self.age}, parent_id={self.parent_id})>"
+        return f"<Member(id={self.id}, name='{self.first_name} {self.last_name}', age={self.age})>"

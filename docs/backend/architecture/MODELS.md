@@ -69,7 +69,6 @@ class User(Base):
     is_verified = Column(Boolean, default=False)
     
     # Relationships
-    children = relationship("Child", back_populates="parent", cascade="all, delete-orphan")
     profile = relationship("UserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
 
     def __repr__(self):
@@ -90,7 +89,6 @@ The User model supports two authentication methods:
 
 | Relationship | Type | Description |
 |--------------|------|-------------|
-| `children` | One-to-Many | References Child model (children/dependents) |
 | `profile` | One-to-One | References UserProfile model (additional user data) |
 
 #### String Representation
@@ -219,29 +217,28 @@ The UserProfile model uses JSON-stored text fields for flexible preference manag
 - **Timezone Support**: Schedule activities across different time zones
 - **Location Analytics**: Regional user distribution and activity patterns
 
-## Child Model
+## Member Model
 
-### Child Class
-**File**: `backend/app/models/child.py`
-**Table**: `children`
+### Member Class
+**File**: `backend/app/models/member.py`
+**Table**: `member`
 
-The Child model represents family members (children) being monitored in the Mini Lively system. Each child belongs to a parent (User) and contains detailed profile and activity information.
+The memeber model represents family members (children, userself, spounse, etc) being monitored in the Mini Lively system.
 
 #### Fields
 
 | Field | Type | Constraints | Description |
 |-------|------|-------------|-------------|
-| `id` | Integer | Primary Key, Index | Unique identifier for each child |
-| `first_name` | String | Not Null | Child's first name |
-| `last_name` | String | Not Null | Child's last name |
-| `date_of_birth` | Date | Not Null | Child's birth date |
-| `gender` | String | Nullable | Child's gender (optional) |
-| `interests` | Text | Nullable | Child's interests and hobbies |
-| `skills` | Text | Nullable | Child's current skills and abilities |
-| `parent_id` | Integer | Foreign Key, Not Null | Reference to parent User |
+| `id` | Integer | Primary Key, Index | Unique identifier for each member |
+| `first_name` | String | Not Null | Member's first name |
+| `last_name` | String | Not Null | Member's last name |
+| `date_of_birth` | Date | Not Null | Member's birth date |
+| `gender` | String | Nullable | Member's gender (optional) |
+| `interests` | Text | Nullable | Member's interests and hobbies |
+| `skills` | Text | Nullable | Member's current skills and abilities |
 | `created_at` | DateTime | Default: now | Record creation timestamp |
 | `updated_at` | DateTime | Auto-update | Last modification timestamp |
-| `is_active` | Boolean | Default: True | Child active status |
+| `is_active` | Boolean | Default: True | Member active status |
 
 #### Computed Properties
 
@@ -249,84 +246,47 @@ The Child model represents family members (children) being monitored in the Mini
 |----------|------|-------------|
 | `age` | Integer | Current age calculated from date_of_birth |
 
-#### Relationships
-
-| Relationship | Type | Description |
-|--------------|------|-------------|
-| `parent` | Many-to-One | References User model (parent/guardian) |
 
 #### Model Definition
 ```python
-from sqlalchemy import Column, Integer, String, Date, Text, DateTime, Boolean, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, Integer, String, Date, Text, DateTime, Boolean
 from datetime import datetime, date
 from .base import Base
 
-class Child(Base):
-    __tablename__ = "children"
+class Member(Base):
+    __tablename__ = "members"
     
     id = Column(Integer, primary_key=True, index=True)
     first_name = Column(String, nullable=False)
     last_name = Column(String, nullable=False)
     date_of_birth = Column(Date, nullable=False)
     gender = Column(String, nullable=True)
+    
+    # Enhanced profile fields
     interests = Column(Text, nullable=True)
     skills = Column(Text, nullable=True)
-    
-    # Relationships
-    parent_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    parent = relationship("User", back_populates="children")
+    avatar_url = Column(String, nullable=True)
     
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Status
     is_active = Column(Boolean, default=True)
     
     @property
     def age(self) -> int:
-        """Calculate and return the child's current age in years."""
+        """Calculate and return the member's current age in years."""
         today = date.today()
         birth_date = self.date_of_birth
         age = today.year - birth_date.year
         if (today.month, today.day) < (birth_date.month, birth_date.day):
             age -= 1
         return age
+    
+    def __repr__(self):
+        return f"<Member(id={self.id}, name='{self.first_name} {self.last_name}', age={self.age})>"
 ```
-
-#### Key Features
-- **Computed Age**: Automatic age calculation with proper handling of leap years and birthday timing
-- **Parent Relationship**: Strong foreign key relationship with User model
-- **Enhanced Profiles**: Support for interests, skills, and personal information
-- **Admin Integration**: Full SQLAdmin interface with filtering, search, and form management
-- **Data Integrity**: Proper constraints and validation rules
-
-## Model Relationships Summary
-
-### Current Model Relationships
-- **User → Child** (one-to-many) ✅ **Implemented**
-- **User → UserProfile** (one-to-one) ✅ **Implemented**
-
-### Model Integration Features
-- **Geographic Search**: UserProfile postal codes enable regional activity discovery
-- **Activity Preferences**: JSON-based preference storage for personalized recommendations
-- **Family Management**: Users can manage multiple children with individual profiles
-- **Enhanced Admin Display**: User string representations improve admin interface usability
-
-## Future Models
-
-### Planned Models
-- **Activity**: Individual activity records
-- **Schedule**: Recurring activity schedules (hockey, art, etc.)
-- **Event**: One-time events (birthday parties, etc.)
-- **ActivityType**: Categories of activities
-- **Location**: Activity locations
-
-### Future Model Relationships
-- Child → Activity (one-to-many)
-- User → Schedule (one-to-many)
-- User → Event (one-to-many)
-- UserProfile → Activity (location-based filtering)
-- Location → Activity (one-to-many)
 
 ## Database Configuration
 
@@ -338,96 +298,3 @@ The system uses SQLAlchemy's declarative approach for model definition. Database
 - SQLAlchemy metadata for table creation
 - Version control for schema changes
 - Environment-specific configurations
-
-## Usage Examples
-
-### Creating a User
-```python
-from app.models.user import User
-from app.database.connection import get_db
-
-# Email/password user with names
-user = User(
-    email="parent@example.com",
-    password_hash=hash_password("secure_password"),
-    first_name="Jane",
-    last_name="Doe"
-)
-
-# Email/password user without names (optional)
-user_minimal = User(
-    email="user@example.com",
-    password_hash=hash_password("secure_password")
-    # first_name and last_name can be omitted
-)
-
-# OAuth user
-oauth_user = User(
-    email="parent@gmail.com",
-    first_name="John",
-    last_name="Smith",
-    oauth_provider="google",
-    oauth_id="google_user_12345",
-    is_verified=True  # OAuth users are pre-verified
-)
-```
-
-### Creating a UserProfile
-```python
-from app.models.user_profile import UserProfile
-
-# Basic profile
-profile = UserProfile(
-    user_id=user.id,
-    phone_number="+1-555-123-4567",
-    city="San Francisco",
-    state="CA",
-    postal_code="94102",
-    country="USA",
-    timezone="America/Los_Angeles"
-)
-
-# Profile with preferences (JSON fields)
-import json
-
-profile_with_prefs = UserProfile(
-    user_id=user.id,
-    preferred_activity_types=json.dumps(["sports", "arts", "outdoors"]),
-    preferred_schedule=json.dumps({
-        "weekdays": ["monday", "wednesday", "friday"],
-        "times": ["afternoon"],
-        "duration": "1-2 hours"
-    }),
-    notification_preferences=json.dumps({
-        "email": True,
-        "sms": False,
-        "push": True
-    })
-)
-```
-
-### Querying Users
-```python
-# Find user by email
-user = session.query(User).filter(User.email == "parent@example.com").first()
-
-# Get active, verified users
-active_users = session.query(User).filter(
-    User.is_active == True,
-    User.is_verified == True
-).all()
-
-# Find users by postal code (geographic search)
-from app.models.user_profile import UserProfile
-
-local_users = session.query(User).join(UserProfile).filter(
-    UserProfile.postal_code == "94102"
-).all()
-
-# Get user with profile information
-user_with_profile = session.query(User).filter(
-    User.email == "parent@example.com"
-).first()
-if user_with_profile.profile:
-    print(f"User location: {user_with_profile.profile.city}, {user_with_profile.profile.state}")
-```
