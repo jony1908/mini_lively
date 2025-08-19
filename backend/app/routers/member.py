@@ -4,6 +4,7 @@ Handles member profile operations.
 """
 
 import os
+import json
 import aiofiles
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
@@ -22,6 +23,8 @@ from app.crud.member import (
     delete_member,
     get_member_options
 )
+from app.models.usertomember import UserToMember
+from app.models.member import Member
 
 
 router = APIRouter(prefix="/members", tags=["members"])
@@ -40,18 +43,47 @@ async def ensure_upload_dir():
 @router.post("/", response_model=MemberResponse, status_code=status.HTTP_201_CREATED)
 async def add_member(
     member: MemberCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """
-    Create a new member profile.
+    Create a new member profile and establish relationship with current user.
     
     - Validates member information including interests and skills
+    - Creates UserToMember relationship with specified relationship type
     - Returns complete member profile with calculated age
     """
     try:
-        new_member = create_member(db, member)
+        # Debug: Print incoming member data
+        print(f"🔍 Incoming member data: {member}")
+        print(f"🔍 Member data dict: {member.model_dump()}")
+        
+        # Extract relationship from member data
+        relationship = member.relationship or "child"  # Default to "child" if not specified
+        
+        # Create member without relationship field (it's not in the Member model)
+        member_data = member.model_dump(exclude={'relationship'})
+        member_create = MemberCreate(**member_data)
+        new_member = create_member(db, member_create)
+        
+        # Create UserToMember relationship
+        user_to_member = UserToMember.create_relationship(
+            user_id=current_user.id,
+            member_id=new_member.id,
+            relation=relationship,
+            created_by_user_id=current_user.id,
+            is_shareable=True,
+            is_manager=True,
+            is_primary=True
+        )
+        
+        db.add(user_to_member)
+        db.commit()
+        db.refresh(user_to_member)
+        
         return new_member
     except Exception as e:
+        db.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Failed to create member profile: {str(e)}"
@@ -61,16 +93,48 @@ async def add_member(
 @router.get("/", response_model=List[MemberListResponse])
 async def get_members(
     db: Session = Depends(get_db),
-    include_inactive: bool = False
+    include_inactive: bool = False,
+    current_user: User = Depends(get_current_user)
 ):
     """
-    Get all members.
+    Get members associated with the current user.
     
-    - Returns list of members with basic information
+    - Returns list of members that the current user has relationships with
     - By default, only returns active members
     - Set include_inactive=true to get all members
     """
-    members = get_all_members(db, active_only=not include_inactive)
+    # Get UserToMember relationships for current user
+    user_relationships = UserToMember.get_user_members(
+        db, 
+        user_id=current_user.id, 
+        active_only=not include_inactive
+    )
+    
+    # Extract member IDs and get member details
+    member_ids = [rel.member_id for rel in user_relationships]
+    if not member_ids:
+        return []
+    
+    # Get members by IDs
+    members = db.query(Member).filter(
+        Member.id.in_(member_ids),
+        Member.is_active == True if not include_inactive else True
+    ).all()
+    
+    # Convert JSON strings back to Python objects for API responses
+    for member in members:
+        if member.interests:
+            try:
+                member.interests = json.loads(member.interests)
+            except json.JSONDecodeError:
+                member.interests = None
+        
+        if member.skills:
+            try:
+                member.skills = json.loads(member.skills)
+            except json.JSONDecodeError:
+                member.skills = None
+    
     return members
 
 
@@ -90,14 +154,28 @@ async def get_member_form_options():
 @router.get("/{member_id}", response_model=MemberResponse)
 async def get_member(
     member_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """
-    Get a specific member by ID.
+    Get a specific member by ID (must be associated with current user).
     
     - Returns complete member profile including interests and skills
-    - Returns 404 if member not found
+    - Returns 404 if member not found or not accessible by current user
     """
+    # Check if user has access to this member
+    user_relationship = db.query(UserToMember).filter(
+        UserToMember.user_id == current_user.id,
+        UserToMember.member_id == member_id,
+        UserToMember.is_active == True
+    ).first()
+    
+    if not user_relationship:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Member not found or access denied"
+        )
+    
     member = get_member_by_id(db, member_id)
     if not member:
         raise HTTPException(
@@ -111,15 +189,30 @@ async def get_member(
 async def update_member_profile(
     member_id: int,
     member_update: MemberUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """
-    Update a member's profile information.
+    Update a member's profile information (must be accessible by current user).
     
     - Updates only provided fields (partial updates supported)
     - Validates all updated information
     - Returns updated member profile
     """
+    # Check if user has management access to this member
+    user_relationship = db.query(UserToMember).filter(
+        UserToMember.user_id == current_user.id,
+        UserToMember.member_id == member_id,
+        UserToMember.is_active == True,
+        UserToMember.is_manager == True
+    ).first()
+    
+    if not user_relationship:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Member not found or access denied"
+        )
+    
     updated_member = update_member(db, member_id, member_update)
     if not updated_member:
         raise HTTPException(
@@ -132,14 +225,29 @@ async def update_member_profile(
 @router.delete("/{member_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_member_profile(
     member_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """
-    Delete a member's profile (soft delete).
+    Delete a member's profile (soft delete, must be accessible by current user).
     
     - Sets member as inactive rather than permanent deletion
-    - Returns 404 if member not found
+    - Returns 404 if member not found or access denied
     """
+    # Check if user has management access to this member
+    user_relationship = db.query(UserToMember).filter(
+        UserToMember.user_id == current_user.id,
+        UserToMember.member_id == member_id,
+        UserToMember.is_active == True,
+        UserToMember.is_manager == True
+    ).first()
+    
+    if not user_relationship:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Member not found or access denied"
+        )
+    
     success = delete_member(db, member_id)
     if not success:
         raise HTTPException(
@@ -152,7 +260,8 @@ async def delete_member_profile(
 async def upload_member_avatar(
     member_id: int,
     file: UploadFile = File(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """
     Upload and process avatar image for a specific member.
@@ -165,6 +274,20 @@ async def upload_member_avatar(
     Returns:
         Dict containing avatar URL and processing info
     """
+    # Check if user has management access to this member
+    user_relationship = db.query(UserToMember).filter(
+        UserToMember.user_id == current_user.id,
+        UserToMember.member_id == member_id,
+        UserToMember.is_active == True,
+        UserToMember.is_manager == True
+    ).first()
+    
+    if not user_relationship:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Member not found or access denied"
+        )
+    
     # Verify member exists
     member = get_member_by_id(db, member_id)
     if not member:
@@ -236,7 +359,8 @@ async def upload_member_avatar(
 @router.delete("/{member_id}/avatar")
 async def remove_member_avatar(
     member_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """
     Remove a member's avatar image.
@@ -247,6 +371,20 @@ async def remove_member_avatar(
     Returns:
         Success confirmation
     """
+    # Check if user has management access to this member
+    user_relationship = db.query(UserToMember).filter(
+        UserToMember.user_id == current_user.id,
+        UserToMember.member_id == member_id,
+        UserToMember.is_active == True,
+        UserToMember.is_manager == True
+    ).first()
+    
+    if not user_relationship:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Member not found or access denied"
+        )
+    
     # Verify member exists
     member = get_member_by_id(db, member_id)
     if not member:
@@ -291,7 +429,8 @@ async def remove_member_avatar(
 @router.get("/{member_id}/avatar")
 async def get_member_avatar_info(
     member_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """
     Get a member's avatar information.
@@ -301,6 +440,19 @@ async def get_member_avatar_info(
     Returns:
         Avatar URL and metadata if exists
     """
+    # Check if user has access to this member
+    user_relationship = db.query(UserToMember).filter(
+        UserToMember.user_id == current_user.id,
+        UserToMember.member_id == member_id,
+        UserToMember.is_active == True
+    ).first()
+    
+    if not user_relationship:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Member not found or access denied"
+        )
+    
     # Verify member exists
     member = get_member_by_id(db, member_id)
     if not member:

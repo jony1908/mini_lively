@@ -79,6 +79,70 @@ async def test_db_connection(db: Session = Depends(get_db)):
     except Exception as e:
         return {"database": "error", "message": str(e)}
 
+@app.post("/seed-data")
+async def seed_database_data(db: Session = Depends(get_db)):
+    """Seed the database with default data (relationship types, etc.)"""
+    try:
+        from .crud.relationship_type import seed_default_relationship_types
+        
+        # Seed relationship types
+        created_types = seed_default_relationship_types(db)
+        
+        result = {
+            "success": True,
+            "message": "Database seeded successfully",
+            "created_relationship_types": len(created_types),
+            "relationship_types": [
+                {
+                    "name": rel_type.name,
+                    "display_name": rel_type.display_name,
+                    "generation_offset": rel_type.generation_offset
+                }
+                for rel_type in created_types
+            ]
+        }
+        
+        return result
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Failed to seed database"
+        }
+
+@app.get("/relationship-types")
+async def list_relationship_types(db: Session = Depends(get_db)):
+    """List all relationship types in the database"""
+    try:
+        from .crud.relationship_type import get_all_relationship_types
+        
+        relationship_types = get_all_relationship_types(db, active_only=False)
+        
+        return {
+            "success": True,
+            "count": len(relationship_types),
+            "relationship_types": [
+                {
+                    "name": rel_type.name,
+                    "display_name": rel_type.display_name,
+                    "generation_offset": rel_type.generation_offset,
+                    "is_active": rel_type.is_active,
+                    "is_reciprocal": rel_type.is_reciprocal
+                }
+                for rel_type in relationship_types
+            ]
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Failed to fetch relationship types"
+        }
+
+# Test endpoints removed - backend is fully functional
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)

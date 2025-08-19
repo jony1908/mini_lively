@@ -213,9 +213,28 @@ const memberAPI = {
   getGenderOptions() {
     return [
       { value: 'Male', label: 'Male' },
-      { value: 'Female', label: 'Female' },
-      { value: 'Other', label: 'Other' },
-      { value: 'Prefer not to say', label: 'Prefer not to say' }
+      { value: 'Female', label: 'Female' }
+    ];
+  },
+
+  /**
+   * Get relationship options with user
+   * @returns {Array} Array of relationship options
+   */
+  getRelationshipOptions() {
+    return [
+      { value: 'child', label: 'Child' },
+      { value: 'spouse', label: 'Spouse' },
+      { value: 'parent', label: 'Parent' },
+      { value: 'sibling', label: 'Sibling' },
+      { value: 'grandparent', label: 'Grandparent' },
+      { value: 'grandchild', label: 'Grandchild' },
+      { value: 'step_parent', label: 'Step Parent' },
+      { value: 'step_child', label: 'Step Child' },
+      { value: 'aunt_uncle', label: 'Aunt/Uncle' },
+      { value: 'niece_nephew', label: 'Niece/Nephew' },
+      { value: 'guardian', label: 'Guardian' },
+      { value: 'ward', label: 'Ward' }
     ];
   },
 
@@ -292,10 +311,16 @@ const memberAPI = {
 
   /**
    * Get default avatar URL for members
-   * @returns {string} Default avatar URL
+   * @returns {string} Default avatar URL (data URL for a simple SVG)
    */
   getDefaultMemberAvatar() {
-    return '/default-member-avatar.png';
+    // Return a simple SVG avatar as a data URL to avoid file dependency issues
+    const svgAvatar = `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96" fill="none">
+      <circle cx="48" cy="48" r="48" fill="#e9e2ce"/>
+      <circle cx="48" cy="32" r="12" fill="#9e8747"/>
+      <path d="M20 80c0-15.464 12.536-28 28-28s28 12.536 28 28" fill="#9e8747"/>
+    </svg>`;
+    return `data:image/svg+xml;base64,${btoa(svgAvatar)}`;
   },
 
   /**

@@ -26,4 +26,18 @@ def get_db():
 
 def init_db():
     from ..models import Base
+    from ..crud.relationship_type import seed_default_relationship_types
+    
+    # Create all tables
     Base.metadata.create_all(bind=engine)
+    
+    # Seed default data
+    db = SessionLocal()
+    try:
+        # Seed relationship types
+        seed_default_relationship_types(db)
+        print("✅ Default relationship types seeded successfully")
+    except Exception as e:
+        print(f"⚠️ Failed to seed relationship types: {e}")
+    finally:
+        db.close()

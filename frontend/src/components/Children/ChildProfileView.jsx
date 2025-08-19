@@ -171,19 +171,21 @@ const ChildProfileView = () => {
             {/* Avatar Section */}
             <div className="flex-shrink-0">
               <div className="w-24 h-24 rounded-full overflow-hidden bg-[#e9e2ce] border-2 border-[#d1c9b3] mb-4">
-                {child.avatar_url ? (
-                  <img 
-                    src={child.avatar_url} 
-                    alt={`${memberAPI.getMemberFullName(child)} avatar`} 
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32px" height="32px" fill="#9e8747" viewBox="0 0 256 256">
-                      <path d="M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.07-52s70.23,19.44,89.07,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z"></path>
-                    </svg>
-                  </div>
-                )}
+                <img 
+                  src={memberAPI.getDisplayAvatarUrl(child)} 
+                  alt={`${memberAPI.getMemberFullName(child)} avatar`} 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    console.log('Avatar load error:', e.target.src);
+                    e.target.style.display = 'none';
+                    e.target.nextElementSibling.style.display = 'flex';
+                  }}
+                />
+                <div className="w-full h-full flex items-center justify-center" style={{ display: child.avatar_url ? 'none' : 'flex' }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="32px" height="32px" fill="#9e8747" viewBox="0 0 256 256">
+                    <path d="M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.07-52s70.23,19.44,89.07,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z"></path>
+                  </svg>
+                </div>
               </div>
               
               {/* Avatar Upload */}

@@ -12,7 +12,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MultiSelect from '../common/MultiSelect';
 import DatePicker from '../common/DatePicker';
-import ChildAvatarUpload from './ChildAvatarUpload';
 import memberAPI from '../../services/member';
 
 const AddChildForm = () => {
@@ -28,6 +27,7 @@ const AddChildForm = () => {
     last_name: '',
     date_of_birth: '',
     gender: '',
+    relationship: '',
     interests: [],
     skills: [],
     avatar_url: null
@@ -35,6 +35,9 @@ const AddChildForm = () => {
 
   // Child ID for avatar upload (set after child creation)
   const [childId, setChildId] = useState(null);
+  
+  // Track selected avatar file for upload after member creation
+  const [selectedAvatarFile, setSelectedAvatarFile] = useState(null);
 
   // Load options on component mount
   useEffect(() => {
@@ -52,6 +55,15 @@ const AddChildForm = () => {
 
     loadOptions();
   }, []);
+
+  // Cleanup preview URL on unmount
+  useEffect(() => {
+    return () => {
+      if (formData.avatar_url && formData.avatar_url.startsWith('blob:')) {
+        memberAPI.cleanupPreviewUrl(formData.avatar_url);
+      }
+    };
+  }, [formData.avatar_url]);
 
   // Handle input changes
   const handleInputChange = (e) => {
@@ -81,6 +93,21 @@ const AddChildForm = () => {
       setErrors(prev => ({
         ...prev,
         gender: ''
+      }));
+    }
+  };
+
+  // Handle relationship selection
+  const handleRelationshipChange = (relationship) => {
+    setFormData(prev => ({
+      ...prev,
+      relationship
+    }));
+    
+    if (errors.relationship) {
+      setErrors(prev => ({
+        ...prev,
+        relationship: ''
       }));
     }
   };
@@ -115,7 +142,25 @@ const AddChildForm = () => {
     return `${age} year${age === 1 ? '' : 's'} old`;
   };
 
-  // Handle avatar update
+  // Handle avatar file selection (for new members)
+  const handleAvatarFileSelect = (file) => {
+    setSelectedAvatarFile(file);
+    // Create preview URL for display
+    if (file) {
+      const previewUrl = memberAPI.createPreviewUrl(file);
+      setFormData(prev => ({
+        ...prev,
+        avatar_url: previewUrl
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        avatar_url: null
+      }));
+    }
+  };
+
+  // Handle avatar update (for existing members)
   const handleAvatarUpdate = (avatarUrl) => {
     setFormData(prev => ({
       ...prev,
@@ -156,6 +201,17 @@ const AddChildForm = () => {
       
       const newMember = await memberAPI.createMember(childData);
       setChildId(newMember.id);
+      
+      // Upload avatar if one was selected
+      if (selectedAvatarFile) {
+        try {
+          const avatarResult = await memberAPI.uploadMemberAvatar(newMember.id, selectedAvatarFile);
+          console.log('Avatar uploaded successfully:', avatarResult);
+        } catch (avatarError) {
+          console.error('Avatar upload failed:', avatarError);
+          // Continue with navigation even if avatar upload fails
+        }
+      }
       
       // Navigate back to children list with success message
       navigate('/members', { 
@@ -292,6 +348,30 @@ const AddChildForm = () => {
           )}
         </div>
 
+        {/* Relationship Selection */}
+        <div className="py-3">
+          <p className="text-[#1c180d] text-base font-medium leading-normal pb-3">Relationship to You</p>
+          <select
+            name="relationship"
+            value={formData.relationship}
+            onChange={(e) => handleRelationshipChange(e.target.value)}
+            className={`form-select flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#1c180d] focus:outline-0 focus:ring-0 border-none bg-[#f4f0e6] focus:border-none h-14 placeholder:text-[#9e8747] p-4 text-base font-normal leading-normal ${
+              errors.relationship ? 'border-2 border-red-300' : ''
+            }`}
+            disabled={submitting}
+          >
+            <option value="">Select relationship...</option>
+            {memberAPI.getRelationshipOptions().map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          {errors.relationship && (
+            <p className="text-red-600 text-sm mt-1">{errors.relationship}</p>
+          )}
+        </div>
+
         {/* Interests Multi-Select */}
         <div className="py-3">
           <MultiSelect
@@ -324,15 +404,47 @@ const AddChildForm = () => {
         <div className="py-3">
           <p className="text-[#1c180d] text-base font-medium leading-normal pb-3">Profile Photo (Optional)</p>
           <div className="bg-[#f4f0e6] rounded-xl p-4">
-            <ChildAvatarUpload
-              childId={childId}
-              childName={formData.first_name || 'Child'}
-              currentAvatarUrl={formData.avatar_url}
-              onAvatarUpdate={handleAvatarUpdate}
-              compact={true}
-            />
+            <div className="flex items-center gap-4">
+              {/* Avatar Preview */}
+              <div className="w-16 h-16 rounded-full overflow-hidden bg-[#e9e2ce] border-2 border-[#d1c9b3] flex-shrink-0">
+                <img 
+                  src={formData.avatar_url || memberAPI.getDefaultMemberAvatar()} 
+                  alt="Avatar preview" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              
+              {/* File Input */}
+              <div className="flex-1">
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      const validation = memberAPI.validateAvatarFile(file);
+                      if (validation.isValid) {
+                        handleAvatarFileSelect(file);
+                      } else {
+                        alert(validation.error);
+                        e.target.value = '';
+                      }
+                    } else {
+                      handleAvatarFileSelect(null);
+                    }
+                  }}
+                  className="block w-full text-sm text-[#1c180d] file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-[#fac638] file:text-[#1c180d] hover:file:bg-[#e9b429] file:cursor-pointer"
+                  disabled={submitting}
+                />
+                {selectedAvatarFile && (
+                  <p className="text-[#9e8747] text-xs mt-1">
+                    Selected: {selectedAvatarFile.name}
+                  </p>
+                )}
+              </div>
+            </div>
             <p className="text-[#9e8747] text-xs mt-2">
-              You can add a photo now or after creating the profile
+              Photo will be uploaded after creating the profile. Supported formats: JPEG, PNG, WEBP
             </p>
           </div>
         </div>

@@ -31,6 +31,7 @@ const EditChildForm = () => {
     last_name: '',
     date_of_birth: '',
     gender: '',
+    relationship: '',
     interests: [],
     skills: [],
     avatar_url: null
@@ -58,6 +59,7 @@ const EditChildForm = () => {
           last_name: childData.last_name || '',
           date_of_birth: childData.date_of_birth || '',
           gender: childData.gender || '',
+          relationship: childData.relationship || '',
           interests: childData.interests || [],
           skills: childData.skills || [],
           avatar_url: childData.avatar_url || null
@@ -106,6 +108,21 @@ const EditChildForm = () => {
       setErrors(prev => ({
         ...prev,
         gender: ''
+      }));
+    }
+  };
+
+  // Handle relationship selection
+  const handleRelationshipChange = (relationship) => {
+    setFormData(prev => ({
+      ...prev,
+      relationship
+    }));
+    
+    if (errors.relationship) {
+      setErrors(prev => ({
+        ...prev,
+        relationship: ''
       }));
     }
   };
@@ -381,6 +398,30 @@ const EditChildForm = () => {
           </div>
           {errors.gender && (
             <p className="text-red-600 text-sm mt-1">{errors.gender}</p>
+          )}
+        </div>
+
+        {/* Relationship Selection */}
+        <div className="py-3">
+          <p className="text-[#1c180d] text-base font-medium leading-normal pb-3">Relationship to You</p>
+          <select
+            name="relationship"
+            value={formData.relationship}
+            onChange={(e) => handleRelationshipChange(e.target.value)}
+            className={`form-select flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#1c180d] focus:outline-0 focus:ring-0 border-none bg-[#f4f0e6] focus:border-none h-14 placeholder:text-[#9e8747] p-4 text-base font-normal leading-normal ${
+              errors.relationship ? 'border-2 border-red-300' : ''
+            }`}
+            disabled={submitting}
+          >
+            <option value="">Select relationship...</option>
+            {memberAPI.getRelationshipOptions().map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          {errors.relationship && (
+            <p className="text-red-600 text-sm mt-1">{errors.relationship}</p>
           )}
         </div>
 
