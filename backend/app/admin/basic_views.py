@@ -4,6 +4,7 @@ from ..models.user import User
 from ..models.admin_user import AdminUser
 from ..models.member import Member
 from ..models.user_profile import UserProfile
+from ..models.usertomember import UserToMember
 
 
 class BasicUserAdmin(ModelView, model=User):
@@ -121,6 +122,92 @@ class BasicUserProfileAdmin(ModelView, model=UserProfile):
         "address": "Address",
         "postal_code": "Zip Code",
         "phone_number": "Phone"
+    }
+    
+    # Basic pagination
+    page_size = 50
+
+
+class BasicUserToMemberAdmin(ModelView, model=UserToMember):
+    # Basic working configuration for UserToMember relationships
+    name = "User-Member Relationship"
+    name_plural = "User-Member Relationships"
+    category = "Relationships"
+    icon = "fa-solid fa-link"
+    
+    # Basic display showing key relationship information
+    column_list = [
+        "id", 
+        "user.first_name", 
+        "user.last_name", 
+        "member.first_name", 
+        "member.last_name", 
+        "relationship_type.name", 
+        "is_manager", 
+        "is_shareable", 
+        "is_primary",
+        "is_active"
+    ]
+    
+    # Filters for relationship management
+    column_filters = [
+        BooleanFilter(column=UserToMember.is_active, title="Active Status"),
+        BooleanFilter(column=UserToMember.is_manager, title="Manager Status"),
+        BooleanFilter(column=UserToMember.is_shareable, title="Shareable Status"),
+        BooleanFilter(column=UserToMember.is_primary, title="Primary Relationship"),
+        BooleanFilter(column=UserToMember.is_visible, title="Visible Status"),
+        AllUniqueStringValuesFilter(column=UserToMember.relation, title="Relationship Type")
+    ]
+    
+    # Search functionality
+    column_searchable_list = [
+        "user.first_name", 
+        "user.last_name", 
+        "user.email",
+        "member.first_name", 
+        "member.last_name",
+        "relationship_type.name"
+    ]
+    
+    # Detailed view with complete relationship information
+    column_details_list = [
+        "id",
+        "user.email",
+        "user.first_name",
+        "user.last_name", 
+        "member.first_name",
+        "member.last_name",
+        "relationship_type.name",
+        "is_manager",
+        "is_shareable", 
+        "is_primary",
+        "is_active",
+        "is_visible",
+        "relationship_notes",
+        "created_by.first_name",
+        "created_by.last_name",
+        "invitation_id",
+        "created_at",
+        "updated_at"
+    ]
+    
+    # Column labels for better display
+    column_labels = {
+        "user.first_name": "User First Name",
+        "user.last_name": "User Last Name",
+        "user.email": "User Email",
+        "member.first_name": "Member First Name", 
+        "member.last_name": "Member Last Name",
+        "relationship_type.name": "Relationship Type",
+        "is_manager": "Manager",
+        "is_shareable": "Shareable",
+        "is_primary": "Primary",
+        "is_active": "Active",
+        "is_visible": "Visible",
+        "relationship_notes": "Notes",
+        "created_by.first_name": "Created By First Name",
+        "created_by.last_name": "Created By Last Name",
+        "invitation_id": "Invitation ID"
     }
     
     # Basic pagination
