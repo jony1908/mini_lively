@@ -29,7 +29,7 @@ const avatarAPI = {
    * @returns {Promise<Object>} Removal confirmation
    */
   async removeAvatar() {
-    const response = await client.delete('/avatar/remove');
+    const response = await client.delete('/avatar/remove/me');
     return response.data;
   },
 
@@ -38,7 +38,7 @@ const avatarAPI = {
    * @returns {Promise<Object>} Avatar info and upload limits
    */
   async getAvatarInfo() {
-    const response = await client.get('/avatar/info');
+    const response = await client.get('/avatar/info/me');
     return response.data;
   },
 

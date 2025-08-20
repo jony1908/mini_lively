@@ -29,7 +29,7 @@ export const profileAPI = {
   // Update existing profile
   async updateProfile(profileData) {
     try {
-      const response = await apiClient.put('/profile', profileData);
+      const response = await apiClient.put('/profile/me', profileData);
       return response.data;
     } catch (error) {
       throw error;
@@ -39,7 +39,7 @@ export const profileAPI = {
   // Delete profile
   async deleteProfile() {
     try {
-      await apiClient.delete('/profile');
+      await apiClient.delete('/profile/me');
       return true;
     } catch (error) {
       throw error;

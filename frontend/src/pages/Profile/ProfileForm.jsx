@@ -36,7 +36,7 @@ const ProfileForm = () => {
         postalCode: profile.postal_code || '',
         country: profile.country || '',
       });
-      setAvatarUrl(profile.profile_picture_url);
+      setAvatarUrl(profile.avatar_url);
     } else if (user) {
       setFormData(prev => ({
         ...prev,
@@ -77,12 +77,14 @@ const ProfileForm = () => {
 
       // Then, update or create profile data
       const profileData = {
+        first_name: 'hf',
+        last_name: 'yz',
         address: formData.address,
         city: formData.city,
         state: formData.state,
         postal_code: formData.postalCode,
         country: formData.country,
-        profile_picture_url: avatarUrl || profile?.profile_picture_url,
+        avatar_url: avatarUrl || profile?.avatar_url,
       };
 
       if (profile) {
